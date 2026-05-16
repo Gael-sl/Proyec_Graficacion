@@ -105,7 +105,7 @@ const DATABASE_OPTIONS = [
     description: "NoSQL flexible para iteración rápida.",
   },
 ];
-
+const SECTION_ORDER = [
   "project",
   "stack",
   "fileStructure",
