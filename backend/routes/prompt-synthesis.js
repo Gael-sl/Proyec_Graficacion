@@ -131,6 +131,10 @@ router.get('/synthesis', (req, res) => {
     const missingDiagramTypes = ['class', 'usecase', 'sequence', 'package']
       .filter(t => !diagramTypes.includes(t));
 
+    const encuestas = db.prepare('SELECT * FROM encuestas').all();
+    const focusGroups = db.prepare('SELECT * FROM focus_groups').all();
+    const documentos = db.prepare('SELECT * FROM analisis_documentos').all();
+
     // --- 5. SUMMARY STATS ---
     const completionScore = {
       hasStakeholders: stakeholders.length > 0,
@@ -139,6 +143,9 @@ router.get('/synthesis', (req, res) => {
       hasModules: modulos.length > 0,
       hasStories: historias.length > 0,
       hasInterviews: entrevistas.length > 0,
+      hasSurveys: encuestas.length > 0,
+      hasFocusGroups: focusGroups.length > 0,
+      hasDocs: documentos.length > 0,
       hasDiagrams: diagramas.length > 0,
       hasAllDiagramTypes: missingDiagramTypes.length === 0,
     };
@@ -155,8 +162,8 @@ router.get('/synthesis', (req, res) => {
       completionScore: {
         details: completionScore,
         score,
-        maxScore: 8,
-        percentage: Math.round((score / 8) * 100),
+        maxScore: 11,
+        percentage: Math.round((score / 11) * 100),
       },
     });
   } catch (error) {

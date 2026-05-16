@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { useProjects } from "@/lib/ProjectContext";
 import { entities } from "@/api/entities";
 import { cn } from "@/lib/utils";
+import { generateMermaid } from "@/lib/mermaid-generator";
 
 const BACKEND_OPTIONS = [
   {
@@ -105,11 +106,11 @@ const DATABASE_OPTIONS = [
   },
 ];
 
-const SECTION_ORDER = [
   "project",
   "stack",
   "fileStructure",
   "permissionMatrix",
+  "research",
   "stakeholders",
   "roles",
   "functions",
@@ -143,20 +144,38 @@ function buildImplementationPlan(modules) {
   return `1. Setup Inicial\n2. Auth & Roles\n3. Módulos: ${safeArray(modules).map(m => m.nombre).join(", ")}\n4. Integración y Test`;
 }
 
+function buildResearchSummary(data) {
+  const parts = [];
+  if (data.interviews?.length) {
+    parts.push("=== ENTREVISTAS ===\n" + data.interviews.map(i => `- Con ${i.participante} (${i.fecha}): ${i.resumen}`).join("\n"));
+  }
+  if (data.surveys?.length) {
+    parts.push("=== ENCUESTAS ===\n" + data.surveys.map(s => `- ${s.titulo}: ${s.resultados || s.objetivo}`).join("\n"));
+  }
+  if (data.focusGroups?.length) {
+    parts.push("=== FOCUS GROUPS ===\n" + data.focusGroups.map(fg => `- ${fg.nombre}: ${fg.conclusiones}`).join("\n"));
+  }
+  if (data.docs?.length) {
+    parts.push("=== ANÁLISIS DE DOCUMENTOS ===\n" + data.docs.map(d => `- ${d.titulo} (${d.tipo}): ${d.resumen}`).join("\n"));
+  }
+  return parts.length ? parts.join("\n\n") : "- Sin datos de investigación registrados.";
+}
+
 function buildPromptText({ projectName, projectDescription, selections, data, synthesis }) {
   const sections = {
     project: `Proyecto: ${projectName}\nDescripción: ${projectDescription}`,
     stack: `Stack: ${selections.backend}, ${selections.frontend}, ${selections.database}`,
     fileStructure: buildFileStructure(selections.backend, selections.frontend, selections.database, data.modules),
     permissionMatrix: buildPermissionMatrix(synthesis?.permissionMatrix),
-    stakeholders: `Stakeholders:\n${safeArray(data.stakeholders).map(s => `- ${s.nombre}`).join("\n")}`,
+    research: buildResearchSummary(data),
+    stakeholders: `Stakeholders:\n${safeArray(data.stakeholders).map(s => `- ${s.nombre} (${s.tipo})`).join("\n")}`,
     roles: `Roles:\n${safeArray(data.roles).map(r => `- ${r.nombre}: ${r.descripcion}`).join("\n")}`,
-    functions: `Funciones:\n${safeArray(data.functions).map(f => `- ${f.nombre}`).join("\n")}`,
-    modules: `Módulos:\n${safeArray(data.modules).map(m => `- ${m.nombre}`).join("\n")}`,
-    requirements: `Historias de Usuario:\n${safeArray(data.stories).map(s => `- ${s.titulo}: ${s.como} -> ${s.quiero}`).join("\n")}`,
-    diagrams: `Diagramas UML:\n${safeArray(data.diagrams).map(d => `- ${d.nombre} (${d.tipo})`).join("\n")}`,
+    functions: `Funciones:\n${safeArray(data.functions).map(f => `- ${f.nombre} [Módulo: ${f.moduloId}]`).join("\n")}`,
+    modules: `Módulos:\n${safeArray(data.modules).map(m => `- ${m.nombre}: ${m.descripcion}`).join("\n")}`,
+    requirements: `Historias de Usuario:\n${safeArray(data.stories).map(s => `- ${s.titulo}: Como ${s.como} -> Quiero ${s.quiero} -> Para ${s.paraQue}`).join("\n")}`,
+    diagrams: `Diagramas UML (Mermaid):\n${safeArray(data.diagrams).map(d => `### ${d.nombre} (${d.tipo})\n\`\`\`mermaid\n${generateMermaid(d)}\n\`\`\``).join("\n\n")}`,
     implementationPlan: buildImplementationPlan(data.modules),
-    instructions: "No hagas preguntas. Genera código limpio y funcional siguiendo esta estructura.",
+    instructions: "Eres un desarrollador senior. Basado en TODA la información anterior (incluyendo los diagramas Mermaid y los resultados de las entrevistas), genera una propuesta técnica completa y modular.",
   };
 
   return SECTION_ORDER.map(k => `## ${k.toUpperCase()}\n${sections[k]}`).join("\n\n");
@@ -213,11 +232,13 @@ export default function GeneradorPrompt() {
   useEffect(() => {
     async function load() {
       try {
-        const [stakeholders, roles, functions, modules, stories, diagrams] = await Promise.all([
+        const [stakeholders, roles, functions, modules, stories, diagrams, interviews, surveys, focusGroups, docs] = await Promise.all([
           entities.Stakeholder.list(), entities.Role.list(), entities.Funcion.list(),
-          entities.Modulo.list(), entities.HistoriaUsuario.list(), entities.Diagrama.list()
+          entities.Modulo.list(), entities.HistoriaUsuario.list(), entities.Diagrama.list(),
+          entities.Entrevista.list(), entities.Encuesta.list(), entities.FocusGroup.list(),
+          entities.AnalisisDocumento.list()
         ]);
-        setData({ stakeholders, roles, functions, modules, stories, diagrams });
+        setData({ stakeholders, roles, functions, modules, stories, diagrams, interviews, surveys, focusGroups, docs });
         const res = await fetch('http://localhost:3001/api/prompt/synthesis');
         if (res.ok) setSynthesis(await res.json());
       } catch (e) { console.error(e); }
