@@ -22,6 +22,10 @@ const createEntityAPI = (entityName) => ({
 
   async delete(id) {
     return client.delete(`/entities/${entityName}/${id}`);
+  },
+
+  async buildPrompt(payload = {}) {
+    return client.post(`/entities/${entityName}/build-prompt`, payload);
   }
 });
 

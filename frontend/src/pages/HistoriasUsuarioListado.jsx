@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function HistoriasUsuarioListado() {
   const navigate = useNavigate();
@@ -37,10 +38,15 @@ export default function HistoriasUsuarioListado() {
     navigate(createPageUrl(`HistoriaUsuarioDetalle?id=${historia.id}`));
   };
 
-  const handleDelete = (historia) => {
-    if (confirm(`¿Está seguro de eliminar la historia "${historia.idHistoria}: ${historia.titulo}"?`)) {
-      deleteMutation.mutate(historia.id);
+  const handleDelete = async (historia) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar historia",
+      description: `¿Está seguro de eliminar la historia "${historia.idHistoria}: ${historia.titulo}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(historia.id);
   };
 
   const filteredData = historias.filter(item => {

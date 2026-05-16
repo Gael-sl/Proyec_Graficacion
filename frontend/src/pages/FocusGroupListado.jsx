@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function FocusGroupListado() {
   const navigate = useNavigate();
@@ -35,10 +36,15 @@ export default function FocusGroupListado() {
     navigate(createPageUrl(`FocusGroupDetalle?id=${focusGroup.id}`));
   };
 
-  const handleDelete = (focusGroup) => {
-    if (confirm(`¿Está seguro de eliminar el focus group "${focusGroup.tema}"?`)) {
-      deleteMutation.mutate(focusGroup.id);
+  const handleDelete = async (focusGroup) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar focus group",
+      description: `¿Está seguro de eliminar el focus group "${focusGroup.tema}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(focusGroup.id);
   };
 
   const filteredData = focusGroups.filter(item => {

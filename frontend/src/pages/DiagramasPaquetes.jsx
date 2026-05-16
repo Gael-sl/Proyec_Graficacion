@@ -5,6 +5,8 @@ import { entities } from "@/api/entities";
 import PageHeader from "@/components/shared/PageHeader";
 import PackageDiagramTable from "@/components/diagramas/paquetes/PackageDiagramTable";
 import DiagramCreateEditModal from "@/components/diagramas/DiagramCreateEditModal";
+import { confirmToast } from "@/lib/confirm-toast";
+import { getLocalDiagrams, mergeById, saveLocalDiagrams } from "@/lib/diagram-storage";
 
 const STORAGE_KEY = "package_diagrams";
 
@@ -14,21 +16,43 @@ export default function DiagramasPaquetes() {
   const [modalTarget, setModalTarget] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  // Load from localStorage
+  // Load from backend first, fallback to localStorage
   useEffect(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
+    let mounted = true;
+    const loadDiagrams = async () => {
+      const localDiagrams = getLocalDiagrams(STORAGE_KEY);
       try {
-        setDiagrams(JSON.parse(saved));
+        const backendDiagrams = await entities.Diagrama.list();
+        const packageDiagrams = backendDiagrams
+          .filter((diagram) => diagram.tipo === "package")
+          .map((diagram) => ({
+            id: diagram.id,
+            name: diagram.nombre,
+            description: diagram.descripcion || "",
+            funcionId: diagram.funcionId || "",
+            ...(diagram.contenido || {}),
+            createdAt: diagram.fechaCreacion,
+            updatedAt: diagram.fechaActualizacion
+          }));
+        if (mounted) {
+          setDiagrams(mergeById(packageDiagrams, localDiagrams));
+        }
       } catch (e) {
-        console.error("Error loading diagrams:", e);
+        console.error("Error loading backend diagrams:", e);
+        if (mounted) {
+          setDiagrams(localDiagrams);
+        }
       }
-    }
+    };
+    loadDiagrams();
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Save to localStorage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(diagrams));
+    saveLocalDiagrams(STORAGE_KEY, diagrams);
   }, [diagrams]);
 
   const handleCreateNew = () => {
@@ -61,7 +85,13 @@ export default function DiagramasPaquetes() {
         tipo: "package",
         nombre: updatedDiagram.name,
         descripcion: updatedDiagram.description || "",
-        funcionId: updatedDiagram.funcionId || ""
+        funcionId: updatedDiagram.funcionId || "",
+        contenido: {
+          packages: updatedDiagram.packages || [],
+          dependencies: updatedDiagram.dependencies || [],
+          imports: updatedDiagram.imports || [],
+          notes: updatedDiagram.notes || []
+        }
       });
       setShowModal(false);
     } else {
@@ -84,6 +114,7 @@ export default function DiagramasPaquetes() {
         ],
         dependencies: [],
         imports: [],
+        notes: [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -93,7 +124,13 @@ export default function DiagramasPaquetes() {
         tipo: "package",
         nombre: newDiagram.name,
         descripcion: newDiagram.description || "",
-        funcionId: newDiagram.funcionId || ""
+        funcionId: newDiagram.funcionId || "",
+        contenido: {
+          packages: newDiagram.packages,
+          dependencies: newDiagram.dependencies,
+          imports: newDiagram.imports,
+          notes: newDiagram.notes
+        }
       });
       // Navegar automáticamente al nuevo diagrama
       setTimeout(() => {
@@ -112,11 +149,16 @@ export default function DiagramasPaquetes() {
     navigate(`/diagrama-paquetes-editor/${diagram.id}`);
   };
 
-  const handleDelete = (diagramId) => {
-    if (window.confirm("¿Estás seguro de que deseas eliminar este diagrama?")) {
-      setDiagrams(prev => prev.filter(d => d.id !== diagramId));
-      void entities.Diagrama.delete(diagramId);
+  const handleDelete = async (diagramId) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar diagrama",
+      description: "¿Estás seguro de que deseas eliminar este diagrama?"
+    });
+    if (!shouldDelete) {
+      return;
     }
+    setDiagrams(prev => prev.filter(d => d.id !== diagramId));
+    void entities.Diagrama.delete(diagramId);
   };
 
   return (

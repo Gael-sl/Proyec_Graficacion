@@ -4,16 +4,8 @@ import { db } from '../config/database.js';
 
 const router = express.Router();
 
-// Create users table if it doesn't exist
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    name TEXT NOT NULL,
-    createdAt TEXT DEFAULT CURRENT_TIMESTAMP
-  )
-`);
+// Create users table if it doesn't exist - MOVED TO initializeDatabase()
+// This is now handled by config/database.js
 
 // Register
 router.post('/register', (req, res) => {

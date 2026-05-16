@@ -12,18 +12,18 @@ export default function PageHeader({
   children
 }) {
   return (
-    <div className="bg-white border-b border-slate-200 px-8 py-6">
-      <div className="flex items-start justify-between">
-        <div className="flex items-start gap-4">
+    <div className="apple-glass-panel border-b border-white/60 px-8 py-6 mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-5">
           {Icon && (
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-500/25">
+            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500/80 to-purple-500/80 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner border border-white/30 shrink-0">
               <Icon className="w-6 h-6 text-white" />
             </div>
           )}
           <div>
-            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">{title}</h1>
+            <h1 className="text-[1.75rem] font-extrabold text-slate-800 tracking-tight leading-none">{title}</h1>
             {description && (
-              <p className="text-slate-500 mt-1">{description}</p>
+              <p className="text-slate-600 font-medium mt-1.5">{description}</p>
             )}
           </div>
         </div>
@@ -33,7 +33,7 @@ export default function PageHeader({
             <Button 
               variant="outline" 
               onClick={onNew}
-              className="border-slate-200 hover:bg-slate-50"
+              className="apple-glass-button bg-white/40 hover:bg-white/60 text-slate-700 px-5 border-white/60"
             >
               <Plus className="w-4 h-4 mr-2" />
               Nuevo registro
@@ -43,7 +43,7 @@ export default function PageHeader({
             <Button 
               onClick={onSave}
               disabled={saving}
-              className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg shadow-indigo-500/25"
+              className="apple-glass-button bg-indigo-600/90 text-white hover:bg-indigo-600 border-transparent shadow-[0_4px_14px_rgba(99,102,241,0.3)] hover:shadow-[0_6px_20px_rgba(99,102,241,0.4)] px-6"
             >
               <Save className="w-4 h-4 mr-2" />
               {saving ? "Guardando..." : "Guardar"}

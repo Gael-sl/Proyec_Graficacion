@@ -19,7 +19,7 @@ This is the frontend application for the HERMAN Project, built with React and Vi
 4. Create an `.env.local` file in the frontend directory:
 
 ```env
-VITE_API_URL=http://localhost:3000/api
+VITE_API_URL=http://localhost:3001/api
 ```
 
 5. Run the development server: `npm run dev`
@@ -28,7 +28,7 @@ The app will be available at `http://localhost:5173/`
 
 ## Backend Setup
 
-Make sure the backend server is running on `http://localhost:3000`. See the backend README for setup instructions.
+Make sure the backend server is running on `http://localhost:3001`. See the backend README for setup instructions.
 
 ## Architecture
 

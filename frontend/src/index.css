@@ -1,9 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Manrope:wght@300;400;500;600;700;800&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* Liquid Glass Variables */
+    --glass-bg: rgba(255, 255, 255, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.5);
+    --glass-blur: blur(12px);
+    --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+    /* Standard Variables */
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -83,7 +91,209 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground overflow-x-hidden;
+    font-family: "Manrope", "Segoe UI", system-ui, -apple-system, sans-serif;
+    /* Apple Liquid Glass dynamic gradient background */
+    background: linear-gradient(135deg, #e0eafc, #cfdef3, #fdfbfb, #ebedee);
+    background-size: 400% 400%;
+    animation: gradientFlow 15s ease infinite;
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: rgba(240, 246, 252, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  @keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: "Fraunces", "Manrope", "Segoe UI", system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+}
+
+/* Ambient animated glowing orbs for the glass to stand out */
+.ambient-orbs {
+  position: fixed;
+  top: 0; left: 0; width: 100vw; height: 100vh;
+  overflow: hidden;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.ambient-orbs::before,
+.ambient-orbs::after {
+  content: "";
+  position: absolute;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.4;
+  animation: orbFloat 20s infinite alternate ease-in-out;
+}
+
+.ambient-orbs::before {
+  top: -10vw;
+  left: -10vw;
+  background: radial-gradient(circle, rgba(99, 179, 237, 0.6), transparent 70%);
+}
+
+.ambient-orbs::after {
+  bottom: -10vw;
+  right: -10vw;
+  background: radial-gradient(circle, rgba(161, 140, 209, 0.5), transparent 70%);
+  animation-delay: -10s;
+}
+
+@keyframes orbFloat {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(10vw, 5vw) scale(1.1); }
+  100% { transform: translate(-5vw, 15vw) scale(0.9); }
+}
+
+@layer components {
+  /* The core Apple Liquid Glass container class */
+  .apple-glass {
+    @apply relative bg-white/35 backdrop-blur-[30px] backdrop-saturate-150 border border-white/65 shadow-[0_14px_42px_rgba(20,35,80,0.10)] rounded-2xl overflow-hidden;
+    /* Optional: Subtle inner glow */
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.42), 0 14px 42px rgba(31, 38, 135, 0.08);
+  }
+
+  .apple-glass-panel {
+    @apply bg-white/40 backdrop-blur-[34px] backdrop-saturate-150 border border-white/60 rounded-[2rem] shadow-[0_18px_48px_rgba(20,35,80,0.12)];
+  }
+
+  .apple-glass-card {
+    @apply bg-white/30 backdrop-blur-[24px] backdrop-saturate-150 border border-white/60 rounded-xl shadow-[0_10px_30px_rgba(20,35,80,0.10)] transition-all duration-300 hover:bg-white/40 hover:-translate-y-1 hover:shadow-[0_16px_42px_rgba(31,38,135,0.14)];
+  }
+
+  .apple-glass-input {
+    @apply bg-white/40 backdrop-blur-md border border-white/50 rounded-lg px-4 py-2 focus:ring-2 focus:ring-sky-400 focus:bg-white/60 transition-all outline-none shadow-sm;
+  }
+
+  .apple-glass-button {
+    @apply bg-white/50 backdrop-blur-lg border border-white/60 text-slate-800 rounded-lg font-medium transition-all hover:bg-white/70 active:scale-95 shadow-sm;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+  }
+
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+    border-radius: 16px;
+  }
+
+  .glass-button {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(56, 189, 248, 0.95));
+    color: white;
+    box-shadow: 0 10px 24px rgba(59, 130, 246, 0.25);
+    border-radius: 12px;
+  }
+
+  .glass-button:hover {
+    filter: brightness(0.98);
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+  }
+
+  .glass-button-outline {
+    background: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(148, 163, 184, 0.35);
+    color: #0f172a;
+    backdrop-filter: blur(12px);
+    border-radius: 12px;
+  }
+
+  .glass-table {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+  }
+
+  /* Toast styling - centered and glass-morphed */
+  .glass-toast {
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    border-radius: 20px;
+  }
+
+  .fade-in {
+    animation: fadeInUp 420ms ease-out both;
+  }
+
+  .toast-action-button {
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(56, 189, 248, 0.9));
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .toast-action-button:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
+
+  .toast-cancel-button {
+    border-radius: 10px;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    background: rgba(148, 163, 184, 0.2);
+    color: #0f172a;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .toast-cancel-button:hover {
+    background: rgba(148, 163, 184, 0.3);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -141,4 +351,13 @@
 .scrollbar-hidden-until-scroll:hover::-webkit-scrollbar-thumb,
 .scrollbar-hidden-until-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.5);
+}
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }

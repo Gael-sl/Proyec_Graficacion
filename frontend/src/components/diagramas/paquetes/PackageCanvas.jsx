@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { exportNodeAsPng, exportNodeAsSvg, sanitizeFilename } from "@/lib/exporter";
 import PackageBox from "./PackageBox";
 import RelationshipLine from "./RelationshipLine";
 import NoteBox from "./NoteBox";
@@ -13,6 +14,7 @@ export default function PackageCanvas({
   setNotes,
   selected,
   setSelected,
+  diagramName,
 }) {
   const canvasRef = useRef(null);
   const [draggingElement, setDraggingElement] = useState(null);
@@ -208,9 +210,21 @@ export default function PackageCanvas({
       {/* Toolbar */}
       <div className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
         <div className="flex items-center gap-4 text-sm text-slate-600">
-          <span>📦 Paquetes: {packages.length}</span>
-          <span>🔗 Relaciones: {dependencies.length}</span>
-          <span>📝 Notas: {notes.length}</span>
+          <span>Paquetes: {packages.length}</span>
+          <span>Relaciones: {dependencies.length}</span>
+          <span>Notas: {notes.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
+            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:brightness-95"
+            title="Exportar PNG"
+          >Exportar PNG</button>
+          <button
+            onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
+            className="px-3 py-1 text-sm bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
+            title="Exportar SVG"
+          >Exportar SVG</button>
         </div>
         {pendingRelationship && (
           <div className="flex items-center gap-2">

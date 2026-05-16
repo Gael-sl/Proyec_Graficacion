@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function AnalisisDocumentosListado() {
   const navigate = useNavigate();
@@ -34,10 +35,15 @@ export default function AnalisisDocumentosListado() {
     navigate(createPageUrl(`AnalisisDocumentosDetalle?id=${documento.id}`));
   };
 
-  const handleDelete = (documento) => {
-    if (confirm(`¿Está seguro de eliminar el análisis de "${documento.nombreDocumento}"?`)) {
-      deleteMutation.mutate(documento.id);
+  const handleDelete = async (documento) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar analisis",
+      description: `¿Está seguro de eliminar el análisis de "${documento.nombreDocumento}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(documento.id);
   };
 
   const filteredData = documentos.filter(item => {

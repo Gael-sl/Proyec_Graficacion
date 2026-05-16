@@ -5,6 +5,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import ClassPalette from "@/components/diagramas/clases/ClassPalette";
 import ClassCanvas from "@/components/diagramas/clases/ClassCanvas";
 import { Button } from "@/components/ui/button";
+import { entities } from "@/api/entities";
+import { getLocalDiagrams, saveLocalDiagrams } from "@/lib/diagram-storage";
 
 const STORAGE_KEY = "class_diagrams";
 
@@ -14,28 +16,54 @@ export default function DiagramaClases() {
   
   const [classes, setClasses] = useState([]);
   const [relationships, setRelationships] = useState([]);
+  const [interfaces, setInterfaces] = useState([]);
+  const [enums, setEnums] = useState([]);
   const [selected, setSelected] = useState(null);
   const [diagramName, setDiagramName] = useState("Diagrama de Clases");
+  const [diagramDescription, setDiagramDescription] = useState("");
+  const [funcionId, setFuncionId] = useState("");
   const [isLoading, setIsLoading] = useState(!!id);
 
   // Load diagram from localStorage if ID is provided
   useEffect(() => {
     if (id) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
+      const localDiagrams = getLocalDiagrams(STORAGE_KEY);
+      const setDiagramState = (diagram) => {
+        setClasses(diagram.classes || []);
+        setRelationships(diagram.relationships || []);
+        setInterfaces(diagram.interfaces || []);
+        setEnums(diagram.enums || []);
+        setDiagramName(diagram.name || diagram.nombre || "Diagrama de Clases");
+        setDiagramDescription(diagram.description || diagram.descripcion || "");
+        setFuncionId(diagram.funcionId || "");
+      };
+      if (localDiagrams.length) {
         try {
-          const diagrams = JSON.parse(saved);
-          const diagram = diagrams.find(d => d.id === id);
+          const diagram = localDiagrams.find(d => d.id === id);
           if (diagram) {
-            setClasses(diagram.classes || []);
-            setRelationships(diagram.relationships || []);
-            setDiagramName(diagram.name);
+            setDiagramState(diagram);
           }
         } catch (e) {
           console.error("Error loading diagram:", e);
         }
       }
-      setIsLoading(false);
+      entities.Diagrama.get(id)
+        .then((diagram) => {
+          if (!diagram) return;
+          setDiagramState({
+            id: diagram.id,
+            ...diagram.contenido,
+            name: diagram.nombre,
+            description: diagram.descripcion,
+            funcionId: diagram.funcionId
+          });
+        })
+        .catch((error) => {
+          console.error("Error loading backend diagram:", error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     } else {
       // Default state for new diagram
       setClasses([
@@ -51,6 +79,10 @@ export default function DiagramaClases() {
           methods: [],
         },
       ]);
+      setInterfaces([]);
+      setEnums([]);
+      setDiagramDescription("");
+      setFuncionId("");
       setIsLoading(false);
     }
   }, [id]);
@@ -58,15 +90,18 @@ export default function DiagramaClases() {
   // Auto-save to localStorage
   useEffect(() => {
     if (id && !isLoading) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const diagrams = saved ? JSON.parse(saved) : [];
+      const diagrams = getLocalDiagrams(STORAGE_KEY);
       const index = diagrams.findIndex(d => d.id === id);
       
       const updatedDiagram = {
         id,
         name: diagramName,
+        description: diagramDescription,
+        funcionId,
         classes,
         relationships,
+        interfaces,
+        enums,
         updatedAt: new Date().toISOString(),
       };
 
@@ -76,9 +111,30 @@ export default function DiagramaClases() {
         diagrams.push(updatedDiagram);
       }
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(diagrams));
+      saveLocalDiagrams(STORAGE_KEY, diagrams);
+
+      // Also save to backend
+      try {
+        import('@/api/entities').then(({ entities }) => {
+          entities.Diagrama.update(id, {
+            id,
+            tipo: "class",
+            nombre: diagramName,
+            descripcion: diagramDescription,
+            funcionId,
+            contenido: {
+              classes,
+              relationships,
+              interfaces,
+              enums
+            }
+          }).catch(e => console.error('Error saving to backend:', e));
+        });
+      } catch (e) {
+        console.error('Error in auto-save:', e);
+      }
     }
-  }, [id, classes, relationships, diagramName, isLoading]);
+  }, [id, classes, relationships, interfaces, enums, diagramName, diagramDescription, funcionId, isLoading]);
 
   const handleBack = () => {
     navigate("/DiagramasClases");
@@ -118,6 +174,7 @@ export default function DiagramaClases() {
           setRelationships={setRelationships}
           selected={selected}
           setSelected={setSelected}
+          diagramName={diagramName}
         />
       </div>
     </div>

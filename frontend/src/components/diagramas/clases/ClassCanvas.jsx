@@ -1,7 +1,10 @@
 import React, { useState, useRef, useCallback } from "react";
+import { exportNodeAsPng, exportNodeAsSvg } from "@/lib/exporter";
 import ClassBox from "./ClassBox";
 import RelationshipLine from "./RelationshipLine";
 import EditModal from "./EditModal";
+
+import { sanitizeFilename } from "@/lib/exporter";
 
 export default function ClassCanvas({
   classes,
@@ -10,6 +13,7 @@ export default function ClassCanvas({
   setRelationships,
   selected,
   setSelected,
+  diagramName,
 }) {
   const canvasRef = useRef(null);
   const [draggingClass, setDraggingClass] = useState(null);
@@ -154,8 +158,20 @@ export default function ClassCanvas({
       {/* Toolbar */}
       <div className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
         <div className="flex items-center gap-4 text-sm text-slate-600">
-          <span>📦 Clases: {classes.length}</span>
-          <span>🔗 Relaciones: {relationships.length}</span>
+          <span>Clases: {classes.length}</span>
+          <span>Relaciones: {relationships.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
+            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:brightness-95"
+            title="Exportar PNG"
+          >Exportar PNG</button>
+          <button
+            onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
+            className="px-3 py-1 text-sm bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
+            title="Exportar SVG"
+          >Exportar SVG</button>
         </div>
         {pendingRelationship && (
           <div className="flex items-center gap-2">

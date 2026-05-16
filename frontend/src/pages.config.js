@@ -82,6 +82,7 @@ import DiagramaPaquetes from './pages/DiagramaPaquetes';
 import DiagramaClases from './pages/DiagramaClases';
 import DiagramasClases from './pages/DiagramasClases';
 import DiagramasPaquetes from './pages/DiagramasPaquetes';
+import GeneradorPrompt from './pages/GeneradorPrompt';
 import __Layout from './Layout.jsx';
 
 
@@ -120,6 +121,7 @@ export const PAGES = {
     "DiagramaClases": DiagramaClases,
     "DiagramasClases": DiagramasClases,
     "DiagramasPaquetes": DiagramasPaquetes,
+    "GeneradorPrompt": GeneradorPrompt,
     "ProjectsList": ProjectsList,
 }
 

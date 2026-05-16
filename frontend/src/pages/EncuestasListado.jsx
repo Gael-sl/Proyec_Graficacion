@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function EncuestasListado() {
   const navigate = useNavigate();
@@ -35,10 +36,15 @@ export default function EncuestasListado() {
     navigate(createPageUrl(`EncuestaDetalle?id=${encuesta.id}`));
   };
 
-  const handleDelete = (encuesta) => {
-    if (confirm(`¿Está seguro de eliminar la encuesta "${encuesta.titulo}"?`)) {
-      deleteMutation.mutate(encuesta.id);
+  const handleDelete = async (encuesta) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar encuesta",
+      description: `¿Está seguro de eliminar la encuesta "${encuesta.titulo}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(encuesta.id);
   };
 
   const filteredData = encuestas.filter(item => {

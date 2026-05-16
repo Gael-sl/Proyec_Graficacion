@@ -7,6 +7,7 @@ import { createPageUrl } from "@/utils";
 import { Input } from "@/components/ui/input";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function ModulosListado() {
   const navigate = useNavigate();
@@ -78,10 +79,15 @@ export default function ModulosListado() {
     navigate(createPageUrl(`ModuloDetalle?id=${modulo.id}`));
   };
 
-  const handleDelete = (modulo) => {
-    if (confirm(`¿Está seguro de eliminar el módulo "${modulo.nombre}"?`)) {
-      deleteMutation.mutate(modulo.id);
+  const handleDelete = async (modulo) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar módulo",
+      description: `¿Está seguro de eliminar el módulo "${modulo.nombre}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(modulo.id);
   };
 
   const moduleRows = modulos.map((modulo) => {

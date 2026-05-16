@@ -7,6 +7,7 @@ import { createPageUrl } from "@/utils";
 import { Input } from "@/components/ui/input";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function RolesListado() {
   const navigate = useNavigate();
@@ -33,10 +34,15 @@ export default function RolesListado() {
     navigate(createPageUrl(`RoleDetalle?id=${role.id}`));
   };
 
-  const handleDelete = (role) => {
-    if (confirm(`¿Está seguro de eliminar el rol "${role.nombre}"?`)) {
-      deleteMutation.mutate(role.id);
+  const handleDelete = async (role) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar rol",
+      description: `¿Está seguro de eliminar el rol "${role.nombre}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(role.id);
   };
 
   const filteredData = roles.filter((item) => {

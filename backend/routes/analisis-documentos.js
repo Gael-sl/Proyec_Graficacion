@@ -51,7 +51,7 @@ router.post('/', (req, res) => {
     const id = uuidv4();
     const now = new Date().toISOString();
 
-    const transaction = db.transaction(() => {
+    db.transaction(() => {
       db.prepare(`
         INSERT INTO analisis_documentos (id, tipoDocumento, nombreDocumento, fuente, autor, fechaDocumento, version, proposito, extractos, requisitos, restricciones, suposiciones, riesgos, fechaCreacion, fechaActualizacion)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -66,8 +66,6 @@ router.post('/', (req, res) => {
       });
     });
 
-    transaction();
-
     res.status(201).json({
       id, tipoDocumento, nombreDocumento, fuente, autor, fechaDocumento, version, proposito, extractos, requisitos, restricciones, suposiciones, riesgos, stakeholderIds, funcionIds, fechaCreacion: now, fechaActualizacion: now
     });
@@ -81,7 +79,7 @@ router.put('/:id', (req, res) => {
     const { tipoDocumento, nombreDocumento, fuente, autor, fechaDocumento, version, proposito, extractos, requisitos, restricciones, suposiciones, riesgos, stakeholderIds = [], funcionIds = [] } = req.body;
     const now = new Date().toISOString();
 
-    const transaction = db.transaction(() => {
+    db.transaction(() => {
       const result = db.prepare(`
         UPDATE analisis_documentos 
         SET tipoDocumento = ?, nombreDocumento = ?, fuente = ?, autor = ?, fechaDocumento = ?, version = ?, proposito = ?, extractos = ?, requisitos = ?, restricciones = ?, suposiciones = ?, riesgos = ?, fechaActualizacion = ?

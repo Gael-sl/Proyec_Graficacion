@@ -7,6 +7,7 @@ import { createPageUrl } from "@/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { confirmToast } from "@/lib/confirm-toast";
 import PageHeader from "@/components/shared/PageHeader";
 import FormCard from "@/components/shared/FormCard";
 
@@ -222,7 +223,11 @@ export default function ModuloDetalle() {
   };
 
   const handleDesvinculateFuncion = async (funcionId) => {
-    if (!confirm("¿Desea desvincular esta función del módulo?")) {
+    const shouldUnlink = await confirmToast({
+      title: "Desvincular función",
+      description: "¿Desea desvincular esta función del módulo?"
+    });
+    if (!shouldUnlink) {
       return;
     }
 

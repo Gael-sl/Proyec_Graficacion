@@ -10,6 +10,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function SeguimientoTransaccionalListado() {
   const navigate = useNavigate();
@@ -36,10 +37,15 @@ export default function SeguimientoTransaccionalListado() {
     navigate(createPageUrl(`SeguimientoTransaccionalDetalle?id=${seguimiento.id}`));
   };
 
-  const handleDelete = (seguimiento) => {
-    if (confirm(`¿Está seguro de eliminar el seguimiento de "${seguimiento.sistema}"?`)) {
-      deleteMutation.mutate(seguimiento.id);
+  const handleDelete = async (seguimiento) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar seguimiento",
+      description: `¿Está seguro de eliminar el seguimiento de "${seguimiento.sistema}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(seguimiento.id);
   };
 
   const filteredData = seguimientos.filter(item => {

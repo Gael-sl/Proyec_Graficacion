@@ -20,10 +20,10 @@ export default function CatalogTable({
   emptyMessage = "No hay registros disponibles"
 }) {
   return (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden bg-white">
+    <div className="glass-table rounded-2xl overflow-hidden">
       <Table>
         <TableHeader>
-          <TableRow className="bg-slate-50 hover:bg-slate-50">
+          <TableRow className="bg-white/60 hover:bg-white/70">
             {columns.map((col) => (
               <TableHead key={col.key} className="font-semibold text-slate-700">
                 {col.label}
@@ -46,7 +46,7 @@ export default function CatalogTable({
             </TableRow>
           ) : (
             data.map((row) => (
-              <TableRow key={row.id} className="hover:bg-slate-50/50 transition-colors">
+              <TableRow key={row.id} className="hover:bg-white/50 transition-colors">
                 {columns.map((col) => (
                   <TableCell key={col.key}>
                     {col.render ? col.render(row[col.key], row) : (
@@ -71,7 +71,7 @@ export default function CatalogTable({
                       variant="outline"
                       size="sm"
                       onClick={() => onView(row)}
-                      className="hover:bg-indigo-50 hover:text-indigo-600 hover:border-indigo-200"
+                      className="glass-button-outline"
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Ver
@@ -80,7 +80,7 @@ export default function CatalogTable({
                       variant="outline"
                       size="sm"
                       onClick={() => onDelete(row)}
-                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                      className="glass-button-outline hover:text-red-600"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

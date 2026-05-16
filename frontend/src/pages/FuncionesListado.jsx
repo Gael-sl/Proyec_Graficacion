@@ -7,6 +7,7 @@ import { createPageUrl } from "@/utils";
 import { Input } from "@/components/ui/input";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function FuncionesListado() {
   const navigate = useNavigate();
@@ -78,10 +79,15 @@ export default function FuncionesListado() {
     navigate(createPageUrl(`FuncionDetalle?id=${funcion.id}`));
   };
 
-  const handleDelete = (funcion) => {
-    if (confirm(`¿Está seguro de eliminar la función "${funcion.nombre}"?`)) {
-      deleteMutation.mutate(funcion.id);
+  const handleDelete = async (funcion) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar funcion",
+      description: `¿Está seguro de eliminar la función "${funcion.nombre}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(funcion.id);
   };
 
   const filteredData = funciones.filter(item => {

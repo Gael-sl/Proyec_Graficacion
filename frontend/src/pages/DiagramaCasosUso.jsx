@@ -5,6 +5,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import UseCasePalette from "@/components/diagramas/casosUso/UseCasePalette";
 import UseCaseCanvas from "@/components/diagramas/casosUso/UseCaseCanvas";
 import { Button } from "@/components/ui/button";
+import { entities } from "@/api/entities";
+import { getLocalDiagrams, saveLocalDiagrams } from "@/lib/diagram-storage";
 
 const STORAGE_KEY = "usecase_diagrams";
 
@@ -17,28 +19,50 @@ export default function DiagramaCasosUso() {
   const [associations, setAssociations] = useState([]);
   const [systemBoundary, setSystemBoundary] = useState({ x: 200, y: 100, width: 400, height: 300 });
   const [diagramName, setDiagramName] = useState("Diagrama sin guardar");
+  const [diagramDescription, setDiagramDescription] = useState("");
+  const [funcionId, setFuncionId] = useState("");
   const [isLoading, setIsLoading] = useState(!!id);
 
   // Load diagram from localStorage if ID is provided
   useEffect(() => {
     if (id) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
+      const localDiagrams = getLocalDiagrams(STORAGE_KEY);
+      const setDiagramState = (diagram) => {
+        setActors(diagram.actors || []);
+        setUseCases(diagram.useCases || []);
+        setAssociations(diagram.associations || []);
+        setSystemBoundary(diagram.systemBoundary || { x: 200, y: 100, width: 400, height: 300 });
+        setDiagramName(diagram.name || diagram.nombre || "Diagrama de Casos de Uso");
+        setDiagramDescription(diagram.description || diagram.descripcion || "");
+        setFuncionId(diagram.funcionId || "");
+      };
+      if (localDiagrams.length) {
         try {
-          const diagrams = JSON.parse(saved);
-          const diagram = diagrams.find(d => d.id === id);
+          const diagram = localDiagrams.find(d => d.id === id);
           if (diagram) {
-            setActors(diagram.actors || []);
-            setUseCases(diagram.useCases || []);
-            setAssociations(diagram.associations || []);
-            setSystemBoundary(diagram.systemBoundary || { x: 200, y: 100, width: 400, height: 300 });
-            setDiagramName(diagram.name);
+            setDiagramState(diagram);
           }
         } catch (e) {
           console.error("Error loading diagram:", e);
         }
       }
-      setIsLoading(false);
+      entities.Diagrama.get(id)
+        .then((diagram) => {
+          if (!diagram) return;
+          setDiagramState({
+            id: diagram.id,
+            ...diagram.contenido,
+            name: diagram.nombre,
+            description: diagram.descripcion,
+            funcionId: diagram.funcionId
+          });
+        })
+        .catch((error) => {
+          console.error("Error loading backend diagram:", error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     } else {
       // Default state for new diagram
       setActors([
@@ -50,6 +74,8 @@ export default function DiagramaCasosUso() {
         { id: "uc2", type: "usecase", name: "Gestionar datos", description: "Administración de datos del sistema", x: 250, y: 220, width: 120, height: 80 },
       ]);
       setAssociations([]);
+      setDiagramDescription("");
+      setFuncionId("");
       setIsLoading(false);
     }
   }, [id]);
@@ -57,13 +83,14 @@ export default function DiagramaCasosUso() {
   // Auto-save to localStorage
   useEffect(() => {
     if (id && !isLoading) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const diagrams = saved ? JSON.parse(saved) : [];
+      const diagrams = getLocalDiagrams(STORAGE_KEY);
       const index = diagrams.findIndex(d => d.id === id);
       
       const updatedDiagram = {
         id,
         name: diagramName,
+        description: diagramDescription,
+        funcionId,
         actors,
         useCases,
         associations,
@@ -77,9 +104,30 @@ export default function DiagramaCasosUso() {
         diagrams.push(updatedDiagram);
       }
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(diagrams));
+      saveLocalDiagrams(STORAGE_KEY, diagrams);
+
+      // Also save to backend
+      try {
+        import('@/api/entities').then(({ entities }) => {
+          entities.Diagrama.update(id, {
+            id,
+            tipo: "usecase",
+            nombre: diagramName,
+            descripcion: diagramDescription,
+            funcionId,
+            contenido: {
+              actors,
+              useCases,
+              associations,
+              systemBoundary
+            }
+          }).catch(e => console.error('Error saving to backend:', e));
+        });
+      } catch (e) {
+        console.error('Error in auto-save:', e);
+      }
     }
-  }, [id, actors, useCases, associations, systemBoundary, diagramName, isLoading]);
+  }, [id, actors, useCases, associations, systemBoundary, diagramName, diagramDescription, funcionId, isLoading]);
 
   const handleBack = () => {
     navigate("/DiagramasCasosUso");
@@ -119,6 +167,9 @@ export default function DiagramaCasosUso() {
           setUseCases={setUseCases}
           associations={associations}
           setAssociations={setAssociations}
+          systemBoundary={systemBoundary}
+          setSystemBoundary={setSystemBoundary}
+          diagramName={diagramName}
         />
       </div>
     </div>

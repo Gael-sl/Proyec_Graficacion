@@ -41,14 +41,14 @@ export default function ProjectsList() {
     <div className="flex-1 overflow-auto">
       <div className="p-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mis Proyectos</h1>
-            <p className="text-gray-600 mt-1">Gestiona todos tus proyectos en un solo lugar</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+          <div className="apple-glass p-6 flex-1">
+            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">Mis Proyectos</h1>
+            <p className="text-slate-600 mt-2 font-medium">Gestiona todos tus proyectos en un solo lugar</p>
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-6 py-3 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors shadow-md hover:shadow-lg"
+            className="flex items-center justify-center gap-2 px-6 py-4 apple-glass-button bg-indigo-500/20 font-bold hover:bg-indigo-500/30 text-indigo-700 whitespace-nowrap"
           >
             <Plus className="w-5 h-5" />
             Nuevo Proyecto
@@ -57,20 +57,20 @@ export default function ProjectsList() {
 
         {/* Grid de Proyectos */}
         {projects.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">📁</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay proyectos</h3>
-            <p className="text-gray-600 mb-6">Crea tu primer proyecto para comenzar</p>
+          <div className="apple-glass text-center py-16 flex flex-col items-center justify-center">
+            <div className="text-6xl mb-6 opacity-80">📁</div>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">No hay proyectos</h3>
+            <p className="text-slate-600 mb-6 font-medium">Crea tu primer proyecto para comenzar a documentar</p>
             <button
               onClick={() => handleOpenModal()}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white rounded-lg font-medium hover:bg-indigo-600 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 apple-glass-button bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-700"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-5 h-5" />
               Crear Proyecto
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {projects.map(project => (
               <ProjectCard
                 key={project.id}

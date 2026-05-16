@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback } from "react";
+import { exportNodeAsPng, exportNodeAsSvg, sanitizeFilename } from "@/lib/exporter";
 import ActorColumn from "./ActorColumn";
 import MessageArrow from "./MessageArrow";
 import FragmentBox from "./FragmentBox";
@@ -12,7 +13,7 @@ const LIFELINE_START_Y = 100;
 const MESSAGE_HEIGHT = 60;
 
 export default function SequenceCanvas({
-  actors, setActors, messages, setMessages, selected, setSelected
+  actors, setActors, messages, setMessages, selected, setSelected, diagramName
 }) {
   const canvasRef = useRef(null);
   const [draggingActor, setDraggingActor] = useState(null);
@@ -229,6 +230,18 @@ export default function SequenceCanvas({
           onMouseLeave={handleMouseUp}
           onClick={() => setSelected(null)}
         >
+          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+            <button
+              onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
+              className="px-2 py-1 text-xs bg-indigo-600 text-white rounded-md hover:brightness-95"
+              title="Exportar PNG"
+            >PNG</button>
+            <button
+              onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
+              className="px-2 py-1 text-xs bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
+              title="Exportar SVG"
+            >SVG</button>
+          </div>
           {/* Grid dots */}
           <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
             <defs>

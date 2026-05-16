@@ -5,6 +5,8 @@ import PageHeader from "@/components/shared/PageHeader";
 import SequencePalette from "@/components/diagramas/secuencia/SequencePalette";
 import SequenceCanvas from "@/components/diagramas/secuencia/SequenceCanvas";
 import { Button } from "@/components/ui/button";
+import { entities } from "@/api/entities";
+import { getLocalDiagrams, saveLocalDiagrams } from "@/lib/diagram-storage";
 
 const STORAGE_KEY = "sequence_diagrams";
 
@@ -14,28 +16,56 @@ export default function DiagramaSecuencia() {
   
   const [actors, setActors] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [fragments, setFragments] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [activations, setActivations] = useState([]);
   const [selected, setSelected] = useState(null);
   const [diagramName, setDiagramName] = useState("Diagrama sin guardar");
+  const [diagramDescription, setDiagramDescription] = useState("");
+  const [funcionId, setFuncionId] = useState("");
   const [isLoading, setIsLoading] = useState(!!id);
 
   // Load diagram from localStorage if ID is provided
   useEffect(() => {
     if (id) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
+      const localDiagrams = getLocalDiagrams(STORAGE_KEY);
+      const setDiagramState = (diagram) => {
+        setActors(diagram.actors || []);
+        setMessages(diagram.messages || []);
+        setFragments(diagram.fragments || []);
+        setNotes(diagram.notes || []);
+        setActivations(diagram.activations || []);
+        setDiagramName(diagram.name || diagram.nombre || "Diagrama de Secuencia");
+        setDiagramDescription(diagram.description || diagram.descripcion || "");
+        setFuncionId(diagram.funcionId || "");
+      };
+      if (localDiagrams.length) {
         try {
-          const diagrams = JSON.parse(saved);
-          const diagram = diagrams.find(d => d.id === id);
+          const diagram = localDiagrams.find(d => d.id === id);
           if (diagram) {
-            setActors(diagram.actors || []);
-            setMessages(diagram.messages || []);
-            setDiagramName(diagram.name);
+            setDiagramState(diagram);
           }
         } catch (e) {
           console.error("Error loading diagram:", e);
         }
       }
-      setIsLoading(false);
+      entities.Diagrama.get(id)
+        .then((diagram) => {
+          if (!diagram) return;
+          setDiagramState({
+            id: diagram.id,
+            ...diagram.contenido,
+            name: diagram.nombre,
+            description: diagram.descripcion,
+            funcionId: diagram.funcionId
+          });
+        })
+        .catch((error) => {
+          console.error("Error loading backend diagram:", error);
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
     } else {
       // Default state for new diagram
       setActors([
@@ -46,6 +76,11 @@ export default function DiagramaSecuencia() {
         { id: "m1", from: "a1", to: "a2", label: "solicitar()", type: "sync", order: 1 },
         { id: "m2", from: "a2", to: "a1", label: "respuesta()", type: "return", order: 2 },
       ]);
+      setFragments([]);
+      setNotes([]);
+      setActivations([]);
+      setDiagramDescription("");
+      setFuncionId("");
       setIsLoading(false);
     }
   }, [id]);
@@ -53,15 +88,19 @@ export default function DiagramaSecuencia() {
   // Auto-save to localStorage
   useEffect(() => {
     if (id && !isLoading) {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const diagrams = saved ? JSON.parse(saved) : [];
+      const diagrams = getLocalDiagrams(STORAGE_KEY);
       const index = diagrams.findIndex(d => d.id === id);
       
       const updatedDiagram = {
         id,
         name: diagramName,
+        description: diagramDescription,
+        funcionId,
         actors,
         messages,
+        fragments,
+        notes,
+        activations,
         updatedAt: new Date().toISOString(),
       };
 
@@ -71,9 +110,31 @@ export default function DiagramaSecuencia() {
         diagrams.push(updatedDiagram);
       }
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(diagrams));
+      saveLocalDiagrams(STORAGE_KEY, diagrams);
+
+      // Also save to backend
+      try {
+        import('@/api/entities').then(({ entities }) => {
+          entities.Diagrama.update(id, {
+            id,
+            tipo: "sequence",
+            nombre: diagramName,
+            descripcion: diagramDescription,
+            funcionId,
+            contenido: {
+              actors,
+              messages,
+              fragments,
+              notes,
+              activations
+            }
+          }).catch(e => console.error('Error saving to backend:', e));
+        });
+      } catch (e) {
+        console.error('Error in auto-save:', e);
+      }
     }
-  }, [id, actors, messages, diagramName, isLoading]);
+  }, [id, actors, messages, fragments, notes, activations, diagramName, diagramDescription, funcionId, isLoading]);
 
   const handleBack = () => {
     navigate("/DiagramasSecuencia");
@@ -113,6 +174,7 @@ export default function DiagramaSecuencia() {
           setMessages={setMessages}
           selected={selected}
           setSelected={setSelected}
+          diagramName={diagramName}
         />
       </div>
     </div>

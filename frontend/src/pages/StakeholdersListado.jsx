@@ -7,6 +7,7 @@ import { createPageUrl } from "@/utils";
 import { Input } from "@/components/ui/input";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function StakeholdersListado() {
   const navigate = useNavigate();
@@ -33,10 +34,15 @@ export default function StakeholdersListado() {
     navigate(createPageUrl(`StakeholderDetalle?id=${stakeholder.id}`));
   };
 
-  const handleDelete = (stakeholder) => {
-    if (confirm(`¿Está seguro de eliminar al stakeholder "${stakeholder.nombre}"?`)) {
-      deleteMutation.mutate(stakeholder.id);
+  const handleDelete = async (stakeholder) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar stakeholder",
+      description: `¿Está seguro de eliminar al stakeholder "${stakeholder.nombre}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(stakeholder.id);
   };
 
   const filteredData = stakeholders.filter(item => {

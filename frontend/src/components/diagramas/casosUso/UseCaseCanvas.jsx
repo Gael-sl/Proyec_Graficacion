@@ -3,11 +3,22 @@ import ActorBox from "./ActorBox";
 import UseCaseBox from "./UseCaseBox";
 import AssociationLine from "./AssociationLine";
 import EditModal from "./EditModal";
+import { exportNodeAsPng, exportNodeAsSvg, sanitizeFilename } from "@/lib/exporter";
 import UseCaseToolbar from "./UseCaseToolbar";
 
 const ACTOR_SIZE = 100;
 
-export default function UseCaseCanvas({ actors, setActors, useCases, setUseCases, associations = [], setAssociations }) {
+export default function UseCaseCanvas({
+  actors,
+  setActors,
+  useCases,
+  setUseCases,
+  associations = [],
+  setAssociations,
+  systemBoundary,
+  setSystemBoundary,
+  diagramName,
+}) {
   const canvasRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const [selected, setSelected] = useState(null);
@@ -15,7 +26,6 @@ export default function UseCaseCanvas({ actors, setActors, useCases, setUseCases
   const [draggingUseCase, setDraggingUseCase] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [editTarget, setEditTarget] = useState(null);
-  const [systemBoundary, setSystemBoundary] = useState({ x: 200, y: 100, width: 400, height: 300 });
   const [resizingSystemBoundary, setResizingSystemBoundary] = useState(false);
   const [pendingAssociation, setPendingAssociation] = useState(null);
 
@@ -236,6 +246,18 @@ export default function UseCaseCanvas({ actors, setActors, useCases, setUseCases
           onMouseLeave={handleMouseUp}
           onClick={() => setSelected(null)}
         >
+            <div className="flex items-center gap-2">
+                <button
+                  onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
+                  className="px-2 py-1 text-xs bg-indigo-600 text-white rounded-md hover:brightness-95"
+                  title="Exportar PNG"
+                >PNG</button>
+                <button
+                  onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
+                  className="px-2 py-1 text-xs bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
+                  title="Exportar SVG"
+                >SVG</button>
+            </div>
           {/* Grid dots */}
           <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
             <defs>

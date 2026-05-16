@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PageHeader from "@/components/shared/PageHeader";
 import CatalogTable from "@/components/shared/CatalogTable";
+import { confirmToast } from "@/lib/confirm-toast";
 
 export default function EntrevistasListado() {
   const navigate = useNavigate();
@@ -35,10 +36,15 @@ export default function EntrevistasListado() {
     navigate(createPageUrl(`EntrevistasDetalle?id=${entrevista.id}`));
   };
 
-  const handleDelete = (entrevista) => {
-    if (confirm(`¿Está seguro de eliminar la entrevista con "${entrevista.entrevistado}"?`)) {
-      deleteMutation.mutate(entrevista.id);
+  const handleDelete = async (entrevista) => {
+    const shouldDelete = await confirmToast({
+      title: "Eliminar entrevista",
+      description: `¿Está seguro de eliminar la entrevista con "${entrevista.entrevistado}"?`
+    });
+    if (!shouldDelete) {
+      return;
     }
+    deleteMutation.mutate(entrevista.id);
   };
 
   const filteredData = entrevistas.filter(item => {

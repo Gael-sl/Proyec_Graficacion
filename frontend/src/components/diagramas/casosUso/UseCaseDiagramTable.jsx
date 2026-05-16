@@ -24,7 +24,10 @@ export default function UseCaseDiagramTable({
     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
       {/* Header with create button */}
       <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-gradient-to-r from-slate-50 to-slate-100">
-        <h3 className="font-semibold text-slate-700">Diagramas de Casos de Uso</h3>
+        <div>
+          <h3 className="font-semibold text-slate-700">Diagramas de Casos de Uso</h3>
+          <p className="text-xs text-slate-500 mt-1">Este es el apartado de casos de uso; cada fila corresponde a un diagrama.</p>
+        </div>
         <Button
           onClick={onCreateNew}
           className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700"
