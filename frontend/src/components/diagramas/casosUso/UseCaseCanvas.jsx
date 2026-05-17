@@ -307,9 +307,7 @@ export default function UseCaseCanvas({
               fill="#1e293b" 
               fontWeight="bold"
               textAnchor="middle"
-            >
               pointerEvents="none"
-              textAnchor="middle"
             >
               Sistema
             </text>
