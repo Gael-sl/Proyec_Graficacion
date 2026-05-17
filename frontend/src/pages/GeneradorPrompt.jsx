@@ -194,10 +194,18 @@ function buildAuthConfig(authId, roles) {
   }).join("\n");
 
   return `=== ESTRATEGIA DE AUTENTICACIÓN: ${authId} ===
-Se requiere implementar un sistema de Login. Para ello, define el archivo .env con estas credenciales obligatorias:
+Se requiere implementar un sistema de Login. Para ello, el agente debe generar el código con las siguientes consideraciones:
+
+1. ARCHIVO .ENV POR DEFECTO:
+Genera un archivo \`.env.example\` y un \`.env\` de desarrollo con estas credenciales (usa valores de prueba locales):
 \`\`\`env
-${selectedEnvVars.map(v => `${v}=<tu_valor>`).join("\n")}
+${selectedEnvVars.map(v => `${v}=valor_de_prueba_local_para_agente`).join("\n")}
 \`\`\`
+
+2. USUARIO DE PRUEBA (SEEDER):
+INSTRUCCIÓN CRÍTICA: Para evitar que el sistema falle en el login al probarlo por primera vez, DEBES crear un script (seeder) que al levantar la base de datos inserte un usuario por defecto con el rol de Administrador.
+- Correo: admin@demo.com
+- Password: password123
 
 === CONTROL DE ACCESO BASADO EN ROLES (RBAC) ===
 Definición de redirecciones post-login:
