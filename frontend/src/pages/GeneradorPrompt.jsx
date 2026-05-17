@@ -176,9 +176,9 @@ function buildImplementationPlan(modules) {
 
 function buildAuthConfig(authId, roles) {
   const envVars = {
-    "email-jwt": ["JWT_SECRET", "JWT_EXPIRES_IN"],
-    "google-oauth": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL", "JWT_SECRET"],
-    "magic-link": ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "JWT_SECRET"],
+    "email-jwt": ["JWT_SECRET", "JWT_EXPIRES_IN", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"],
+    "google-oauth": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL", "JWT_SECRET", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"],
+    "magic-link": ["SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "JWT_SECRET", "EMAIL_FROM"],
     "firebase-auth": ["FIREBASE_API_KEY", "FIREBASE_AUTH_DOMAIN", "FIREBASE_PROJECT_ID"],
   };
 
@@ -195,21 +195,31 @@ function buildAuthConfig(authId, roles) {
 
   const isGoogle = authId === "google-oauth";
 
-  return `=== ESTRATEGIA DE AUTENTICACIÓN: ${authId} ===
-Se requiere implementar un sistema de Login. Para ello, el agente debe generar el código con las siguientes consideraciones:
+  return `=== ESTRATEGIA DE AUTENTICACIÓN Y SEGURIDAD: ${authId} ===
+Se requiere implementar un sistema de Autenticación y Control de Acceso completo. El agente debe generar el código con las siguientes especificaciones técnicas de producción:
 
-1. ARCHIVO .ENV POR DEFECTO:
-Genera un archivo \`.env.example\` y un \`.env\` de desarrollo con estas credenciales (usa valores de prueba locales):
+1. ARCHIVO .ENV DE PRODUCCIÓN:
+Genera un archivo \`.env.example\` y el archivo \`.env\` correspondiente configurado para soportar tanto autenticación como envío de correos:
 \`\`\`env
-${selectedEnvVars.map(v => `${v}=valor_de_prueba_local_para_agente`).join("\n")}
+# Autenticación
+${selectedEnvVars.filter(v => !v.startsWith("SMTP") && v !== "EMAIL_FROM").map(v => `${v}=valor_real_aqui`).join("\n")}
+
+# Configuración de Servidor de Correos (SMTP) para Recuperación de Contraseña
+${selectedEnvVars.filter(v => v.startsWith("SMTP") || v === "EMAIL_FROM").map(v => `${v}=valor_real_aqui`).join("\n")}
 \`\`\`
 
-2. LOGIN HÍBRIDO Y MODO DE PRUEBAS AUTOMÁTICO:
-${isGoogle ? `- MODO HÍBRIDO: Aunque el método principal seleccionado es Google OAuth, implementa también la opción de Login tradicional (Correo/Contraseña) en la misma pantalla para facilitar pruebas locales inmediatas.
-- BYPASS DE DESARROLLO (MOCK GOOGLE LOGIN): Si el archivo \`.env\` contiene valores genéricos de prueba para Google, al dar clic en "Iniciar Sesión con Google", el sistema debe simular un flujo exitoso y logear al usuario por defecto (admin@demo.com) automáticamente para evitar bloqueos por falta de credenciales de Google Console reales en ambiente de desarrollo.` : ""}
+2. FLUJO DE RECUPERACIÓN DE CONTRASEÑA (EMAIL OTP):
+INSTRUCCIÓN CRÍTICA: Implementa un flujo completo de "Recuperar Contraseña" funcional:
+- El usuario podrá dar clic en "¿Olvidaste tu contraseña?".
+- El sistema solicitará su correo y, utilizando la librería \`nodemailer\` (o similar según stack), enviará un correo con un token numérico de seguridad temporal (OTP).
+- El usuario ingresará el código en la pantalla de verificación para poder definir de forma segura su nueva contraseña.
 
-3. USUARIO DE PRUEBA (SEEDER):
-INSTRUCCIÓN CRÍTICA: Para evitar que el sistema falle en el login al probarlo por primera vez, DEBES crear un script (seeder) que al levantar la base de datos inserte un usuario por defecto con el rol de Administrador.
+3. LOGIN HÍBRIDO Y BYPASS DE DESARROLLO:
+${isGoogle ? `- MODO HÍBRIDO: Integra el login tradicional (Correo/Contraseña) junto con el botón de "Google Sign-In".
+- BYPASS DE SEGURIDAD EN DESARROLLO: Si las credenciales de Google o SMTP no están configuradas en el \`.env\` local, el sistema debe alertar en consola de desarrollo y permitir un bypass rápido (usando un botón "Demo" o detectando credenciales mock) para que la UI se pueda probar instantáneamente sin configurar APIs.` : ""}
+
+4. USUARIO ADMINISTRADOR DE PRUEBA (SEEDER):
+Crea un script (seeder) de base de datos que inserte un usuario administrador por defecto:
 - Correo: admin@demo.com
 - Password: password123
 
