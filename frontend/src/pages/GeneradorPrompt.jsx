@@ -174,7 +174,7 @@ function buildImplementationPlan(modules) {
   return `1. Setup Inicial\n2. Auth & Roles\n3. Módulos: ${safeArray(modules).map(m => m.nombre).join(", ")}\n4. Integración y Test`;
 }
 
-function buildAuthConfig(authId, roles) {
+function buildAuthConfig(authId, roles, credentials = {}) {
   const envVars = {
     "email-jwt": ["JWT_SECRET", "JWT_EXPIRES_IN", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"],
     "google-oauth": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL", "JWT_SECRET", "SMTP_HOST", "SMTP_PORT", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"],
@@ -195,17 +195,33 @@ function buildAuthConfig(authId, roles) {
 
   const isGoogle = authId === "google-oauth";
 
+  // Map variable names to UI entered values or fallbacks
+  const getVal = (v) => {
+    if (v === "GOOGLE_CLIENT_ID" && credentials.googleClientId) return credentials.googleClientId;
+    if (v === "GOOGLE_CLIENT_SECRET" && credentials.googleClientSecret) return credentials.googleClientSecret;
+    if (v === "GOOGLE_CALLBACK_URL") return "http://localhost:3000/api/auth/google/callback";
+    if (v === "SMTP_USER" && credentials.smtpUser) return credentials.smtpUser;
+    if (v === "SMTP_PASS" && credentials.smtpPass) return credentials.smtpPass;
+    if (v === "SMTP_HOST") return "smtp.gmail.com";
+    if (v === "SMTP_PORT") return "587";
+    if (v === "JWT_SECRET") return "super_secret_jwt_key_gerasoft_123456";
+    if (v === "JWT_EXPIRES_IN") return "7d";
+    if (v === "EMAIL_FROM" && credentials.smtpUser) return credentials.smtpUser;
+    if (v === "EMAIL_FROM") return "noreply@demo.com";
+    return "reemplazar_con_tu_valor_real";
+  };
+
   return `=== ESTRATEGIA DE AUTENTICACIÓN Y SEGURIDAD: ${authId} ===
 Se requiere implementar un sistema de Autenticación y Control de Acceso completo. El agente debe generar el código con las siguientes especificaciones técnicas de producción:
 
-1. ARCHIVO .ENV DE PRODUCCIÓN:
-Genera un archivo \`.env.example\` y el archivo \`.env\` correspondiente configurado para soportar tanto autenticación como envío de correos:
+1. ARCHIVO .ENV DE PRODUCCIÓN (CREADO POR EL AGENTE):
+DEBES crear directamente el archivo \`.env\` con estos valores reales listos para funcionar:
 \`\`\`env
 # Autenticación
-${selectedEnvVars.filter(v => !v.startsWith("SMTP") && v !== "EMAIL_FROM").map(v => `${v}=valor_real_aqui`).join("\n")}
+${selectedEnvVars.filter(v => !v.startsWith("SMTP") && v !== "EMAIL_FROM").map(v => `${v}=${getVal(v)}`).join("\n")}
 
 # Configuración de Servidor de Correos (SMTP) para Recuperación de Contraseña
-${selectedEnvVars.filter(v => v.startsWith("SMTP") || v === "EMAIL_FROM").map(v => `${v}=valor_real_aqui`).join("\n")}
+${selectedEnvVars.filter(v => v.startsWith("SMTP") || v === "EMAIL_FROM").map(v => `${v}=${getVal(v)}`).join("\n")}
 \`\`\`
 
 2. FLUJO DE RECUPERACIÓN DE CONTRASEÑA (EMAIL OTP):
@@ -246,11 +262,11 @@ function buildResearchSummary(data) {
   return parts.length ? parts.join("\n\n") : "- Sin datos de investigación registrados.";
 }
 
-function buildPromptText({ projectName, projectDescription, selections, data, synthesis }) {
+function buildPromptText({ projectName, projectDescription, selections, data, synthesis, credentials }) {
   const sections = {
     project: `Proyecto: ${projectName}\nDescripción: ${projectDescription}`,
     stack: `Stack: ${selections.backend}, ${selections.frontend}, ${selections.database}`,
-    auth: buildAuthConfig(selections.auth, data.roles),
+    auth: buildAuthConfig(selections.auth, data.roles, credentials),
     fileStructure: buildFileStructure(selections.backend, selections.frontend, selections.database, data.modules),
     permissionMatrix: buildPermissionMatrix(synthesis?.permissionMatrix),
     research: buildResearchSummary(data),
@@ -308,6 +324,12 @@ export default function GeneradorPrompt() {
   const [synthesis, setSynthesis] = useState(null);
   const [data, setData] = useState({ stakeholders: [], roles: [], functions: [], modules: [], stories: [], diagrams: [] });
 
+  // Custom Env Credentials States
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleClientSecret, setGoogleClientSecret] = useState("");
+  const [smtpUser, setSmtpUser] = useState("");
+  const [smtpPass, setSmtpPass] = useState("");
+
   useEffect(() => {
     if (currentProject) {
       setProjectName(currentProject.name || projectName);
@@ -334,7 +356,14 @@ export default function GeneradorPrompt() {
 
   const regeneratePrompt = () => {
     setIsGenerating(true);
-    const text = buildPromptText({ projectName, projectDescription, selections, data, synthesis });
+    const text = buildPromptText({ 
+      projectName, 
+      projectDescription, 
+      selections, 
+      data, 
+      synthesis,
+      credentials: { googleClientId, googleClientSecret, smtpUser, smtpPass }
+    });
     setPromptText(text);
     setTimeout(() => setIsGenerating(false), 300);
   };
@@ -401,6 +430,35 @@ export default function GeneradorPrompt() {
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Metadata</h3>
               <Input value={projectName} onChange={e => setProjectName(e.target.value)} className="text-xs font-bold h-10" placeholder="Nombre" />
               <Input value={projectDescription} onChange={e => setProjectDescription(e.target.value)} className="text-xs h-10" placeholder="Descripción" />
+            </div>
+
+            <div className="apple-glass-card p-6 bg-white space-y-4">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Variables de Entorno (.env)</h3>
+              <p className="text-[10px] text-slate-500 font-medium mb-2">Escribe tus credenciales reales aquí si deseas que se incluyan directamente en el archivo .env autogenerado por el prompt:</p>
+              
+              {selections.auth === "google-oauth" && (
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-600 uppercase">Google Client ID</label>
+                    <Input value={googleClientId} onChange={e => setGoogleClientId(e.target.value)} className="text-xs h-9 font-mono" placeholder="123456-abc.apps.googleusercontent.com" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[9px] font-bold text-slate-600 uppercase">Google Client Secret</label>
+                    <Input value={googleClientSecret} onChange={e => setGoogleClientSecret(e.target.value)} type="password" className="text-xs h-9 font-mono" placeholder="••••••••••••••••" />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-slate-600 uppercase">SMTP Email / Usuario</label>
+                  <Input value={smtpUser} onChange={e => setSmtpUser(e.target.value)} className="text-xs h-9 font-mono" placeholder="ejemplo@gmail.com" />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[9px] font-bold text-slate-600 uppercase">SMTP Contraseña / App Password</label>
+                  <Input value={smtpPass} onChange={e => setSmtpPass(e.target.value)} type="password" className="text-xs h-9 font-mono" placeholder="••••••••••••••••" />
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
