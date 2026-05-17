@@ -131,11 +131,15 @@ export default function ClassCanvas({
     setEditTarget({ type: "relationship", item: newRel });
   };
 
-  // ── DELETE ────────────────────────────────────────────────────────────────
+  // ── DELETE Y DUPLICAR ──────────────────────────────────────────────────────
   const deleteClass = (id) => {
     setClasses(prev => prev.filter(c => c.id !== id));
     setRelationships(prev => prev.filter(r => r.from !== id && r.to !== id));
     setSelected(null);
+  };
+  const duplicateClass = (cls) => {
+    const newId = `class-${Date.now()}`;
+    setClasses(prev => [...prev, { ...cls, id: newId, x: cls.x + 50, y: cls.y + 50 }]);
   };
 
   const deleteRelationship = (id) => {
@@ -255,6 +259,7 @@ export default function ClassCanvas({
               }}
               onDoubleClick={() => setEditTarget({ type: "class", item: classItem })}
               onDelete={() => deleteClass(classItem.id)}
+              onDuplicate={() => duplicateClass(classItem)}
               onMouseDown={(e) => {
                 if (e.target.dataset.resize) {
                   e.stopPropagation();

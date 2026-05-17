@@ -1,71 +1,90 @@
 import React from "react";
 import { Package, Code2, Box, Trash2 } from "lucide-react";
 
-export default function PackageBox({ element, isSelected, onClick, onDoubleClick, onDelete, onMouseDown }) {
-  const iconMap = {
-    package: Package,
-    interface: Code2,
-    class: Box,
-  };
-
-  const colorMap = {
-    package: { bg: "from-indigo-100 to-indigo-50", border: "border-indigo-300", icon: "text-indigo-600" },
-    interface: { bg: "from-purple-100 to-purple-50", border: "border-purple-300", icon: "text-purple-600" },
-    class: { bg: "from-blue-100 to-blue-50", border: "border-blue-300", icon: "text-blue-600" },
-  };
-
-  const Icon = iconMap[element.type] || Package;
-  const colors = colorMap[element.type] || colorMap.package;
+export default function PackageBox({ element, isSelected, onClick, onDoubleClick, onDelete, onDuplicate, onMouseDown }) {
+  // Pale yellow for UML package
+  const bgColor = "#fffdf0";
+  const borderColor = "#1e293b";
 
   return (
     <div
-      className={`absolute bg-gradient-to-br ${colors.bg} border-2 ${colors.border} rounded-xl p-4 shadow-sm transition-all cursor-pointer select-none group`}
+      className={`absolute cursor-pointer select-none group ${isSelected ? "ring-2 ring-blue-500" : ""}`}
       style={{
         left: element.x,
         top: element.y,
         width: element.width,
         height: element.height,
         zIndex: isSelected ? 100 : 10,
-        boxShadow: isSelected ? "0 0 0 3px rgba(99, 102, 241, 0.1)" : undefined,
+        display: "flex",
+        flexDirection: "column",
       }}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       onMouseDown={onMouseDown}
     >
-      {/* Header con icono y nombre */}
-      <div className="flex items-start gap-2 mb-2">
-        <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${colors.icon}`}>
-          <Icon className="w-4 h-4" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-semibold text-sm text-slate-900 truncate">{element.name}</p>
-          <p className="text-xs text-slate-500 capitalize">{element.type}</p>
-        </div>
+      {/* Folder Tab */}
+      <div 
+        style={{ 
+          height: "20px", 
+          width: "40%", 
+          minWidth: "60px",
+          background: bgColor, 
+          border: `2px solid ${borderColor}`, 
+          borderBottom: "none",
+        }}
+      />
+      {/* Main Body */}
+      <div 
+        className="flex-1 overflow-hidden"
+        style={{ 
+          background: bgColor, 
+          border: `2px solid ${borderColor}`,
+          padding: "8px",
+          display: "flex",
+          flexDirection: "column"
+        }}
+      >
+        <p className={`font-bold text-[13px] text-red-700 text-center truncate ${element.type === 'interface' ? 'italic' : ''}`}>
+          {element.name}
+        </p>
+        <p className="text-[10px] text-slate-800 text-center capitalize mb-1">
+          {element.type === 'interface' ? '«interface»' : element.type === 'class' ? '«class»' : ''}
+        </p>
+        {element.description && (
+          <p className="text-[11px] text-slate-700 text-center line-clamp-3 mt-1 leading-tight">
+            {element.description}
+          </p>
+        )}
       </div>
 
-      {/* Descripción */}
-      {element.description && (
-        <p className="text-xs text-slate-600 line-clamp-2 mb-2">{element.description}</p>
-      )}
-
-      {/* Delete button */}
+      {/* Action buttons */}
       {isSelected && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition-all"
-          title="Eliminar"
-        >
-          <Trash2 className="w-3 h-3" />
-        </button>
+        <div className="absolute -top-3 -right-3 flex gap-1 bg-white p-1 rounded-full shadow border border-slate-200 z-50">
+          {onDuplicate && (
+            <button
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+              className="w-5 h-5 flex items-center justify-center hover:bg-slate-100 rounded-full transition-colors"
+              title="Duplicar"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-700"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          )}
+          <button
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="w-5 h-5 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors"
+            title="Eliminar"
+          >
+            <Trash2 className="w-3 h-3 text-red-600" />
+          </button>
+        </div>
       )}
 
       {/* Resize handle */}
       <div
         data-resize="true"
-        className="absolute bottom-0 right-0 w-4 h-4 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute bottom-0 right-0 w-3 h-3 bg-slate-300 cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
         title="Redimensionar"
       />
     </div>

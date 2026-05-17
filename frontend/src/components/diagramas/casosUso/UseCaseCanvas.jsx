@@ -191,7 +191,7 @@ export default function UseCaseCanvas({
     setEditTarget({ type: "association", item: newAssociation });
   };
 
-  // ── DELETE ────────────────────────────────────────────────────────────────
+  // ── DELETE Y DUPLICAR ──────────────────────────────────────────────────────
   const deleteActor = (id) => {
     setActors(prev => prev.filter(a => a.id !== id));
     if (setAssociations) {
@@ -199,12 +199,21 @@ export default function UseCaseCanvas({
     }
     setSelected(null);
   };
+  const duplicateActor = (actor) => {
+    const newId = `actor-${Date.now()}`;
+    setActors(prev => [...prev, { ...actor, id: newId, y: actor.y + 80 }]);
+  };
+
   const deleteUseCase = (id) => {
     setUseCases(prev => prev.filter(u => u.id !== id));
     if (setAssociations) {
       setAssociations(prev => prev.filter(a => a.from !== id && a.to !== id));
     }
     setSelected(null);
+  };
+  const duplicateUseCase = (uc) => {
+    const newId = `usecase-${Date.now()}`;
+    setUseCases(prev => [...prev, { ...uc, id: newId, y: uc.y + 80 }]);
   };
   const deleteAssociation = (id) => {
     if (setAssociations) {
@@ -268,9 +277,9 @@ export default function UseCaseCanvas({
             <rect width="100%" height="100%" fill="url(#dots)" />
           </svg>
 
-          {/* System boundary (resizable) */}
+          {/* System Boundary (resizable) */}
           <svg 
-            className="absolute" 
+            className="absolute bg-white" 
             style={{ 
               left: systemBoundary.x, 
               top: systemBoundary.y, 
@@ -287,17 +296,18 @@ export default function UseCaseCanvas({
               width={systemBoundary.width} 
               height={systemBoundary.height} 
               fill="none" 
-              stroke="#cbd5e1" 
+              stroke="#1e293b" 
               strokeWidth="2" 
-              strokeDasharray="5,5"
               pointerEvents="none"
             />
             <text 
               x={systemBoundary.width / 2} 
               y="20" 
-              fontSize="12" 
-              fill="#94a3b8" 
+              fontSize="13" 
+              fill="#1e293b" 
               fontWeight="bold"
+              textAnchor="middle"
+            >
               pointerEvents="none"
               textAnchor="middle"
             >
@@ -359,6 +369,7 @@ export default function UseCaseCanvas({
                 }}
                 onDoubleClick={() => setEditTarget({ type: "actor", item: actor })}
                 onDelete={() => deleteActor(actor.id)}
+                onDuplicate={() => duplicateActor(actor)}
                 onMouseDown={(e) => handleActorMouseDown(e, actor)}
               />
             </div>
@@ -381,6 +392,7 @@ export default function UseCaseCanvas({
                 }}
                 onDoubleClick={() => setEditTarget({ type: "usecase", item: useCase })}
                 onDelete={() => deleteUseCase(useCase.id)}
+                onDuplicate={() => duplicateUseCase(useCase)}
                 onMouseDown={(e) => handleUseCaseMouseDown(e, useCase)}
               />
             </div>

@@ -1,34 +1,19 @@
 import React from "react";
 import { Box, Database, Shield, File, Trash2 } from "lucide-react";
 
-export default function ClassBox({ classItem, isSelected, onClick, onDoubleClick, onDelete, onMouseDown }) {
-  const iconMap = {
-    class: Box,
-    interface: Shield,
-    enum: File,
-    abstract: Database,
-  };
-
-  const colorMap = {
-    class: { bg: "from-indigo-100 to-indigo-50", border: "border-indigo-300", icon: "text-indigo-600", header: "bg-indigo-200" },
-    interface: { bg: "from-purple-100 to-purple-50", border: "border-purple-300", icon: "text-purple-600", header: "bg-purple-200" },
-    enum: { bg: "from-blue-100 to-blue-50", border: "border-blue-300", icon: "text-blue-600", header: "bg-blue-200" },
-    abstract: { bg: "from-amber-100 to-amber-50", border: "border-amber-300", icon: "text-amber-600", header: "bg-amber-200" },
-  };
-
-  const Icon = iconMap[classItem.type] || Box;
-  const colors = colorMap[classItem.type] || colorMap.class;
+export default function ClassBox({ classItem, isSelected, onClick, onDoubleClick, onDelete, onDuplicate, onMouseDown }) {
+  // Classic UML Colors
+  const headerColor = classItem.type === "interface" ? "bg-[#d0e0ed]" : "bg-[#7cb5ec]";
 
   return (
     <div
-      className={`absolute bg-gradient-to-br ${colors.bg} border-2 ${colors.border} rounded-lg shadow-sm transition-all cursor-pointer select-none group overflow-hidden`}
+      className={`absolute bg-white border-2 rounded-sm shadow-sm transition-all cursor-pointer select-none group overflow-hidden ${isSelected ? "border-blue-600 ring-2 ring-blue-100" : "border-slate-800"}`}
       style={{
         left: classItem.x,
         top: classItem.y,
         width: classItem.width,
         height: classItem.height,
         zIndex: isSelected ? 100 : 10,
-        boxShadow: isSelected ? "0 0 0 3px rgba(99, 102, 241, 0.1)" : undefined,
         display: "flex",
         flexDirection: "column",
       }}
@@ -37,62 +22,63 @@ export default function ClassBox({ classItem, isSelected, onClick, onDoubleClick
       onMouseDown={onMouseDown}
     >
       {/* Header */}
-      <div className={`${colors.header} px-3 py-2 flex items-center gap-2 border-b border-slate-300`}>
-        <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 ${colors.icon}`}>
-          <Icon className="w-3 h-3" />
-        </div>
-        <div className="flex-1 min-w-0">
-          <p className="font-bold text-xs text-slate-900 truncate">{classItem.name}</p>
-        </div>
+      <div className={`${headerColor} px-3 py-1.5 flex flex-col items-center justify-center border-b-2 border-slate-800 text-center`}>
+        {classItem.type === "interface" && <span className="text-[10px] italic text-slate-800">&laquo;interface&raquo;</span>}
+        {classItem.type === "abstract" && <span className="text-[10px] italic text-slate-800">&laquo;abstract&raquo;</span>}
+        {classItem.type === "enum" && <span className="text-[10px] italic text-slate-800">&laquo;enum&raquo;</span>}
+        <p className={`font-bold text-[13px] text-slate-900 truncate w-full ${classItem.type === "abstract" ? "italic" : ""}`}>{classItem.name}</p>
       </div>
 
       {/* Atributos */}
-      <div className="flex-1 overflow-auto px-2 py-1 text-xs">
+      <div className="flex-1 px-2 py-1.5 text-[11px] leading-tight overflow-hidden">
         {classItem.attributes && classItem.attributes.length > 0 ? (
-          <>
-            {classItem.attributes.map((attr, i) => (
-              <p key={i} className="text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
-                {attr.visibility || '+'} {attr.name}: {attr.type || '?'}
-              </p>
-            ))}
-            <div className="border-t border-slate-300 my-1" />
-          </>
-        ) : (
-          <p className="text-slate-500 italic">Sin atributos</p>
-        )}
+          classItem.attributes.map((attr, i) => (
+            <p key={i} className="text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">
+              {attr.visibility || '-'} {attr.name}: {attr.type || 'any'}
+            </p>
+          ))
+        ) : null}
       </div>
 
       {/* Métodos */}
-      <div className="flex-1 overflow-auto px-2 py-1 text-xs border-t border-slate-300">
+      <div className="flex-1 px-2 py-1.5 text-[11px] leading-tight border-t-2 border-slate-800 overflow-hidden">
         {classItem.methods && classItem.methods.length > 0 ? (
           classItem.methods.map((method, i) => (
-            <p key={i} className="text-slate-700 whitespace-nowrap overflow-hidden text-ellipsis">
+            <p key={i} className="text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">
               {method.visibility || '+'} {method.name}()
             </p>
           ))
-        ) : (
-          <p className="text-slate-500 italic">Sin métodos</p>
-        )}
+        ) : null}
       </div>
 
-      {/* Delete button */}
+      {/* Action buttons */}
       {isSelected && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete();
-          }}
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 p-1 bg-red-100 hover:bg-red-200 text-red-600 rounded transition-all"
-          title="Eliminar"
-        >
-          <Trash2 className="w-3 h-3" />
-        </button>
+        <div className="absolute -top-3 -right-3 flex gap-1 bg-white p-1 rounded-full shadow border border-slate-200 z-50">
+          {onDuplicate && (
+            <button
+              onMouseDown={(e) => e.stopPropagation()}
+              onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+              className="w-5 h-5 flex items-center justify-center hover:bg-slate-100 rounded-full transition-colors"
+              title="Duplicar"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-700"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            </button>
+          )}
+          <button
+            onMouseDown={(e) => e.stopPropagation()}
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="w-5 h-5 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors"
+            title="Eliminar"
+          >
+            <Trash2 className="w-3 h-3 text-red-600" />
+          </button>
+        </div>
       )}
 
       {/* Resize handle */}
       <div
         data-resize="true"
-        className="absolute bottom-0 right-0 w-4 h-4 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+        className="absolute bottom-0 right-0 w-3 h-3 bg-slate-300 rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
         title="Redimensionar"
       />
     </div>

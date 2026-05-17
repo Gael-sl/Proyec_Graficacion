@@ -19,10 +19,7 @@ const typeColors = {
   service: "from-emerald-500 to-teal-600",
 };
 
-export default function ActorColumn({ actor, isSelected, isDragging, onClick, onDoubleClick, onMouseDown, onDelete }) {
-  const Icon = iconMap[actor.type] || Monitor;
-  const gradient = typeColors[actor.type] || typeColors.system;
-
+export default function ActorColumn({ actor, isSelected, isDragging, onClick, onDoubleClick, onMouseDown, onDelete, onDuplicate }) {
   return (
     <div
       className="absolute"
@@ -32,35 +29,42 @@ export default function ActorColumn({ actor, isSelected, isDragging, onClick, on
       onMouseDown={onMouseDown}
     >
       <div className={`relative flex flex-col items-center`}>
-        {/* Box */}
+        {/* UML Strict Rectangle */}
         <div className={`
-          w-full rounded-xl border-2 bg-white shadow-md transition-all
-          ${isSelected ? "border-indigo-500 shadow-indigo-200 shadow-lg" : "border-slate-200 hover:border-indigo-300"}
+          w-full border-2 bg-white flex flex-col items-center justify-center min-h-[40px] px-2 transition-all
+          ${isSelected ? "border-blue-600 shadow-md ring-2 ring-blue-100" : "border-slate-800 shadow-sm"}
         `}>
-          <div className={`bg-gradient-to-br ${gradient} rounded-t-[10px] py-2 flex justify-center`}>
-            <Icon className="w-5 h-5 text-white" />
-          </div>
-          <div className="px-2 py-1.5 text-center">
-            <p className="text-xs font-semibold text-slate-700 truncate">{actor.name}</p>
-          </div>
+          <p className="text-[11px] font-bold text-slate-900 text-center leading-tight">{actor.name}</p>
         </div>
 
-        {/* Action buttons (visible on select) */}
+        {/* Action buttons */}
         {isSelected && (
-          <div className="absolute -top-2 -right-2 flex gap-1">
+          <div className="absolute -top-3 -right-3 flex gap-1 bg-white p-1 rounded-full shadow border border-slate-200 z-50">
             <button
               onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onDoubleClick(); }}
-              className="w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow hover:bg-indigo-50 hover:border-indigo-300 transition-colors"
+              className="w-5 h-5 flex items-center justify-center hover:bg-slate-100 rounded-full transition-colors"
+              title="Editar"
             >
-              <Pencil className="w-3 h-3 text-indigo-500" />
+              <Pencil className="w-3 h-3 text-slate-700" />
             </button>
+            {onDuplicate && (
+              <button
+                onMouseDown={(e) => e.stopPropagation()}
+                onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+                className="w-5 h-5 flex items-center justify-center hover:bg-slate-100 rounded-full transition-colors"
+                title="Duplicar"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-slate-700"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              </button>
+            )}
             <button
               onMouseDown={(e) => e.stopPropagation()}
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="w-6 h-6 bg-white border border-red-200 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors"
+              className="w-5 h-5 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors"
+              title="Eliminar"
             >
-              <Trash2 className="w-3 h-3 text-red-500" />
+              <Trash2 className="w-3 h-3 text-red-600" />
             </button>
           </div>
         )}

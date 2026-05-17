@@ -177,12 +177,16 @@ export default function SequenceCanvas({
     setEditTarget({ type: "message", item: newMsg });
   };
 
-  // ── DELETE ────────────────────────────────────────────────────────────────
+  // ── DELETE & DUPLICATE ────────────────────────────────────────────────────
   const deleteActor = (id) => {
     setActors(prev => prev.filter(a => a.id !== id));
     setMessages(prev => prev.filter(m => m.from !== id && m.to !== id));
     setActivations(prev => prev.filter(a => a.actorId !== id));
     setSelected(null);
+  };
+  const duplicateActor = (actor) => {
+    const newId = `actor-${Date.now()}`;
+    setActors(prev => [...prev, { ...actor, id: newId, x: actor.x + 130 }]);
   };
   const deleteMessage = (id) => { setMessages(prev => prev.filter(m => m.id !== id)); setSelected(null); };
   const deleteFragment = (id) => { setFragments(prev => prev.filter(f => f.id !== id)); setSelected(null); };
@@ -283,7 +287,7 @@ export default function SequenceCanvas({
             >
               <line
                 x1="1" y1="0" x2="1" y2={lifelineHeight}
-                stroke={pendingMessage && pendingMessage.from === actor.id ? "#6366f1" : "#cbd5e1"}
+                stroke={pendingMessage && pendingMessage.from === actor.id ? "#3b82f6" : "#64748b"}
                 strokeWidth={pendingMessage && pendingMessage.from === actor.id ? 2 : 1.5}
                 strokeDasharray="6,4"
               />
@@ -363,6 +367,7 @@ export default function SequenceCanvas({
               onDoubleClick={() => setEditTarget({ type: "actor", item: actor })}
               onMouseDown={(e) => handleActorMouseDown(e, actor)}
               onDelete={() => deleteActor(actor.id)}
+              onDuplicate={() => duplicateActor(actor)}
             />
           ))}
 

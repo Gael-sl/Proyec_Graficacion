@@ -171,11 +171,15 @@ export default function PackageCanvas({
     setEditTarget({ type: "relationship", item: newRel });
   };
 
-  // ── DELETE ────────────────────────────────────────────────────────────────
+  // ── DELETE Y DUPLICAR ──────────────────────────────────────────────────────
   const deleteElement = (id) => {
     setPackages(prev => prev.filter(p => p.id !== id));
     setDependencies(prev => prev.filter(d => d.from !== id && d.to !== id));
     setSelected(null);
+  };
+  const duplicateElement = (element) => {
+    const newId = `elem-${Date.now()}`;
+    setPackages(prev => [...prev, { ...element, id: newId, x: element.x + 50, y: element.y + 50 }]);
   };
 
   const deleteRelationship = (id) => {
@@ -308,6 +312,7 @@ export default function PackageCanvas({
               }}
               onDoubleClick={() => setEditTarget({ type: "element", item: element })}
               onDelete={() => deleteElement(element.id)}
+              onDuplicate={() => duplicateElement(element)}
               onMouseDown={(e) => {
                 if (e.target.dataset.resize) {
                   e.stopPropagation();

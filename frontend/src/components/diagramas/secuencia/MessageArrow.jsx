@@ -2,10 +2,10 @@ import React from "react";
 import { Trash2 } from "lucide-react";
 
 const typeStyles = {
-  sync: { stroke: "#6366f1", dash: "none", label: "sync" },
-  async: { stroke: "#a855f7", dash: "6,3", label: "async" },
-  return: { stroke: "#10b981", dash: "6,3", label: "return" },
-  self: { stroke: "#f59e0b", dash: "none", label: "self" },
+  sync: { stroke: "#1e293b", dash: "none", label: "sync" },
+  async: { stroke: "#475569", dash: "6,3", label: "async" },
+  return: { stroke: "#64748b", dash: "6,3", label: "return" },
+  self: { stroke: "#334155", dash: "none", label: "self" },
 };
 
 export default function MessageArrow({ msg, fromX, toX, y, isSelected, onClick, onDoubleClick, onDelete }) {
