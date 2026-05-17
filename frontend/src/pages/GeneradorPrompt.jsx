@@ -177,7 +177,7 @@ function buildImplementationPlan(modules) {
 function buildAuthConfig(authId, roles) {
   const envVars = {
     "email-jwt": ["JWT_SECRET", "JWT_EXPIRES_IN"],
-    "google-oauth": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL"],
+    "google-oauth": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL", "JWT_SECRET"],
     "magic-link": ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "JWT_SECRET"],
     "firebase-auth": ["FIREBASE_API_KEY", "FIREBASE_AUTH_DOMAIN", "FIREBASE_PROJECT_ID"],
   };
@@ -193,6 +193,8 @@ function buildAuthConfig(authId, roles) {
     return `- Al logearse, el rol "${r.nombre}" debe ser redirigido a la pantalla: ${redirect}`;
   }).join("\n");
 
+  const isGoogle = authId === "google-oauth";
+
   return `=== ESTRATEGIA DE AUTENTICACIÓN: ${authId} ===
 Se requiere implementar un sistema de Login. Para ello, el agente debe generar el código con las siguientes consideraciones:
 
@@ -202,7 +204,11 @@ Genera un archivo \`.env.example\` y un \`.env\` de desarrollo con estas credenc
 ${selectedEnvVars.map(v => `${v}=valor_de_prueba_local_para_agente`).join("\n")}
 \`\`\`
 
-2. USUARIO DE PRUEBA (SEEDER):
+2. LOGIN HÍBRIDO Y MODO DE PRUEBAS AUTOMÁTICO:
+${isGoogle ? `- MODO HÍBRIDO: Aunque el método principal seleccionado es Google OAuth, implementa también la opción de Login tradicional (Correo/Contraseña) en la misma pantalla para facilitar pruebas locales inmediatas.
+- BYPASS DE DESARROLLO (MOCK GOOGLE LOGIN): Si el archivo \`.env\` contiene valores genéricos de prueba para Google, al dar clic en "Iniciar Sesión con Google", el sistema debe simular un flujo exitoso y logear al usuario por defecto (admin@demo.com) automáticamente para evitar bloqueos por falta de credenciales de Google Console reales en ambiente de desarrollo.` : ""}
+
+3. USUARIO DE PRUEBA (SEEDER):
 INSTRUCCIÓN CRÍTICA: Para evitar que el sistema falle en el login al probarlo por primera vez, DEBES crear un script (seeder) que al levantar la base de datos inserte un usuario por defecto con el rol de Administrador.
 - Correo: admin@demo.com
 - Password: password123
