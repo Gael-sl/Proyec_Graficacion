@@ -105,9 +105,38 @@ const DATABASE_OPTIONS = [
     description: "NoSQL flexible para iteración rápida.",
   },
 ];
+
+const AUTH_OPTIONS = [
+  {
+    id: "email-jwt",
+    label: "Email + Password",
+    short: "JWT",
+    description: "Autenticación tradicional (JWT).",
+  },
+  {
+    id: "google-oauth",
+    label: "Google OAuth",
+    short: "Google",
+    description: "Login rápido con Google Workspace.",
+  },
+  {
+    id: "magic-link",
+    label: "Magic Links",
+    short: "Magic",
+    description: "Login sin contraseña por correo.",
+  },
+  {
+    id: "firebase-auth",
+    label: "Firebase Auth",
+    short: "Firebase",
+    description: "Servicio BaaS de identidad.",
+  },
+];
+
 const SECTION_ORDER = [
   "project",
   "stack",
+  "auth",
   "fileStructure",
   "permissionMatrix",
   "research",
@@ -125,6 +154,7 @@ const DEFAULT_SELECTIONS = {
   backend: "node-express",
   frontend: "react-vite",
   database: "sqlite",
+  auth: "google-oauth",
 };
 
 function safeArray(v) { return Array.isArray(v) ? v : []; }
@@ -142,6 +172,37 @@ function buildPermissionMatrix(matrix) {
 
 function buildImplementationPlan(modules) {
   return `1. Setup Inicial\n2. Auth & Roles\n3. Módulos: ${safeArray(modules).map(m => m.nombre).join(", ")}\n4. Integración y Test`;
+}
+
+function buildAuthConfig(authId, roles) {
+  const envVars = {
+    "email-jwt": ["JWT_SECRET", "JWT_EXPIRES_IN"],
+    "google-oauth": ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_CALLBACK_URL"],
+    "magic-link": ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "JWT_SECRET"],
+    "firebase-auth": ["FIREBASE_API_KEY", "FIREBASE_AUTH_DOMAIN", "FIREBASE_PROJECT_ID"],
+  };
+
+  const selectedEnvVars = envVars[authId] || [];
+  
+  const roleRedirects = safeArray(roles).map(r => {
+    const name = r.nombre.toLowerCase();
+    let redirect = "/dashboard";
+    if (name.includes("admin")) redirect = "/admin";
+    if (name.includes("recep") || name.includes("venta") || name.includes("mostrador")) redirect = "/punto-de-venta";
+    if (name.includes("cliente") || name.includes("paciente")) redirect = "/mi-perfil";
+    return `- Al logearse, el rol "${r.nombre}" debe ser redirigido a la pantalla: ${redirect}`;
+  }).join("\n");
+
+  return `=== ESTRATEGIA DE AUTENTICACIÓN: ${authId} ===
+Se requiere implementar un sistema de Login. Para ello, define el archivo .env con estas credenciales obligatorias:
+\`\`\`env
+${selectedEnvVars.map(v => `${v}=<tu_valor>`).join("\n")}
+\`\`\`
+
+=== CONTROL DE ACCESO BASADO EN ROLES (RBAC) ===
+Definición de redirecciones post-login:
+${roleRedirects || "- No hay roles definidos. El usuario debe ser redirigido al /dashboard general."}
+`;
 }
 
 function buildResearchSummary(data) {
@@ -165,6 +226,7 @@ function buildPromptText({ projectName, projectDescription, selections, data, sy
   const sections = {
     project: `Proyecto: ${projectName}\nDescripción: ${projectDescription}`,
     stack: `Stack: ${selections.backend}, ${selections.frontend}, ${selections.database}`,
+    auth: buildAuthConfig(selections.auth, data.roles),
     fileStructure: buildFileStructure(selections.backend, selections.frontend, selections.database, data.modules),
     permissionMatrix: buildPermissionMatrix(synthesis?.permissionMatrix),
     research: buildResearchSummary(data),
@@ -318,6 +380,7 @@ export default function GeneradorPrompt() {
             </div>
 
             <div className="space-y-4">
+              <TechPicker title="Autenticación" icon={ShieldCheck} options={AUTH_OPTIONS} value={selections.auth} onChange={v => setSelections(s => ({ ...s, auth: v }))} />
               <TechPicker title="Backend" icon={Server} options={BACKEND_OPTIONS} value={selections.backend} onChange={v => setSelections(s => ({ ...s, backend: v }))} />
               <TechPicker title="Frontend" icon={Layout} options={FRONTEND_OPTIONS} value={selections.frontend} onChange={v => setSelections(s => ({ ...s, frontend: v }))} />
               <TechPicker title="Database" icon={Database} options={DATABASE_OPTIONS} value={selections.database} onChange={v => setSelections(s => ({ ...s, database: v }))} />
