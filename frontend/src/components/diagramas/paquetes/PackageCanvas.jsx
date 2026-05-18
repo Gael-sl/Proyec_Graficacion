@@ -204,10 +204,14 @@ export default function PackageCanvas({
     setEditTarget(null);
   };
 
-  // ── CANVAS SIZE ───────────────────────────────────────────────────────────
-  // El canvas siempre toma el tamaño disponible sin expandirse
-  // Los elementos pueden salirse del viewport y se scrollean
-  // No se calcula un tamaño dinámico basado en elementos
+  // ── CANVAS SIZE CALCULATION ───────────────────────────────────────────────
+  const maxPackX = packages.reduce((max, p) => Math.max(max, p.x + (p.width || 150)), 0);
+  const maxNoteX = notes.reduce((max, n) => Math.max(max, n.x + (n.width || 160)), 0);
+  const canvasWidth = Math.max(1600, Math.max(maxPackX, maxNoteX) + 400);
+
+  const maxPackY = packages.reduce((max, p) => Math.max(max, p.y + (p.height || 120)), 0);
+  const maxNoteY = notes.reduce((max, n) => Math.max(max, n.y + (n.height || 70)), 0);
+  const canvasHeight = Math.max(1000, Math.max(maxPackY, maxNoteY) + 300);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
@@ -219,16 +223,7 @@ export default function PackageCanvas({
           <span>Notas: {notes.length}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
-            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:brightness-95"
-            title="Exportar PNG"
-          >Exportar PNG</button>
-          <button
-            onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
-            className="px-3 py-1 text-sm bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
-            title="Exportar SVG"
-          >Exportar SVG</button>
+          {/* Export buttons removed */}
         </div>
         {pendingRelationship && (
           <div className="flex items-center gap-2">
@@ -250,6 +245,8 @@ export default function PackageCanvas({
           ref={canvasRef}
           className="relative bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
           style={{
+            width: canvasWidth,
+            height: canvasHeight,
             minWidth: "100%",
             minHeight: "100%",
             cursor: draggingElement ? "grabbing" : "default",

@@ -3,7 +3,7 @@ import React from "react";
 const ACTOR_WIDTH = 120;
 const BAR_W = 12;
 
-export default function ActivationBar({ bar, actors, messagesY, isSelected, onClick, onDelete }) {
+export default function ActivationBar({ bar, actors, isSelected, onClick, onDelete }) {
   const actor = actors.find(a => a.id === bar.actorId);
   if (!actor) return null;
 

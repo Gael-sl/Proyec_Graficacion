@@ -231,11 +231,15 @@ export default function UseCaseCanvas({
   };
 
   // ── CANVAS SIZE CALCULATION ───────────────────────────────────────────────
-  const canvasHeight = Math.max(280,
-    actors.reduce((max, a) => Math.max(max, a.y + ACTOR_SIZE + 40), 280),
-    useCases.reduce((max, u) => Math.max(max, u.y + (u.height || 80) + 40), 280),
-    systemBoundary.y + systemBoundary.height + 40,
-  );
+  const maxActorX = actors.reduce((max, a) => Math.max(max, a.x + ACTOR_SIZE), 0);
+  const maxUseCaseX = useCases.reduce((max, u) => Math.max(max, u.x + (u.width || 140)), 0);
+  const maxBoundaryX = systemBoundary ? systemBoundary.x + systemBoundary.width : 0;
+  const canvasWidth = Math.max(1600, Math.max(maxActorX, maxUseCaseX, maxBoundaryX) + 400);
+
+  const maxActorY = actors.reduce((max, a) => Math.max(max, a.y + ACTOR_SIZE), 0);
+  const maxUseCaseY = useCases.reduce((max, u) => Math.max(max, u.y + (u.height || 80)), 0);
+  const maxBoundaryY = systemBoundary ? systemBoundary.y + systemBoundary.height : 0;
+  const canvasHeight = Math.max(1000, Math.max(maxActorY, maxUseCaseY, maxBoundaryY) + 300);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
@@ -247,7 +251,7 @@ export default function UseCaseCanvas({
         <div
           ref={canvasRef}
           className="relative bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
-          style={{ width: '100%', height: canvasHeight, minWidth: '100%', minHeight: '100%' }}
+          style={{ width: canvasWidth, height: canvasHeight, minWidth: '100%', minHeight: '100%' }}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onMouseMove={handleMouseMove}
@@ -255,18 +259,6 @@ export default function UseCaseCanvas({
           onMouseLeave={handleMouseUp}
           onClick={() => setSelected(null)}
         >
-            <div className="flex items-center gap-2">
-                <button
-                  onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
-                  className="px-2 py-1 text-xs bg-indigo-600 text-white rounded-md hover:brightness-95"
-                  title="Exportar PNG"
-                >PNG</button>
-                <button
-                  onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
-                  className="px-2 py-1 text-xs bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
-                  title="Exportar SVG"
-                >SVG</button>
-            </div>
           {/* Grid dots */}
           <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
             <defs>

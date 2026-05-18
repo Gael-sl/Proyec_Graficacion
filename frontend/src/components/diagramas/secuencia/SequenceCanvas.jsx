@@ -202,16 +202,14 @@ export default function SequenceCanvas({
     setEditTarget(null);
   };
 
-  const canvasWidth = Math.max(280,
-    actors.reduce((max, a) => Math.max(max, a.x + ACTOR_WIDTH + 40), 280),
-    fragments.reduce((max, f) => Math.max(max, f.x + f.width + 40), 280),
-    notes.reduce((max, n) => Math.max(max, n.x + (n.width || 160) + 40), 280),
-  );
-  const canvasHeight = Math.max(
-    lifelineHeight + 60,
-    fragments.reduce((max, f) => Math.max(max, f.y + f.height + 40), lifelineHeight + 60),
-    notes.reduce((max, n) => Math.max(max, n.y + (n.height || 70) + 40), lifelineHeight + 60),
-  );
+  const maxActorX = actors.reduce((max, a) => Math.max(max, a.x + ACTOR_WIDTH), 0);
+  const maxFragX = fragments.reduce((max, f) => Math.max(max, f.x + f.width), 0);
+  const maxNoteX = notes.reduce((max, n) => Math.max(max, n.x + (n.width || 160)), 0);
+  const canvasWidth = Math.max(1600, Math.max(maxActorX, maxFragX, maxNoteX) + 400);
+
+  const maxFragY = fragments.reduce((max, f) => Math.max(max, f.y + f.height), 0);
+  const maxNoteY = notes.reduce((max, n) => Math.max(max, n.y + (n.height || 70)), 0);
+  const canvasHeight = Math.max(1000, Math.max(lifelineHeight + 100, maxFragY, maxNoteY) + 300);
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
@@ -234,18 +232,6 @@ export default function SequenceCanvas({
           onMouseLeave={handleMouseUp}
           onClick={() => setSelected(null)}
         >
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-            <button
-              onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
-              className="px-2 py-1 text-xs bg-indigo-600 text-white rounded-md hover:brightness-95"
-              title="Exportar PNG"
-            >PNG</button>
-            <button
-              onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
-              className="px-2 py-1 text-xs bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
-              title="Exportar SVG"
-            >SVG</button>
-          </div>
           {/* Grid dots */}
           <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
             <defs>

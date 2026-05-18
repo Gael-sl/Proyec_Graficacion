@@ -157,6 +157,13 @@ export default function ClassCanvas({
     setEditTarget(null);
   };
 
+  // ── CANVAS SIZE CALCULATION ───────────────────────────────────────────────
+  const maxClassX = classes.reduce((max, c) => Math.max(max, c.x + (c.width || 150)), 0);
+  const canvasWidth = Math.max(1600, maxClassX + 400);
+
+  const maxClassY = classes.reduce((max, c) => Math.max(max, c.y + (c.height || 120)), 0);
+  const canvasHeight = Math.max(1000, maxClassY + 300);
+
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
       {/* Toolbar */}
@@ -166,16 +173,7 @@ export default function ClassCanvas({
           <span>Relaciones: {relationships.length}</span>
         </div>
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => canvasRef.current && exportNodeAsPng(canvasRef.current, `${sanitizeFilename(diagramName)}.png`)}
-            className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:brightness-95"
-            title="Exportar PNG"
-          >Exportar PNG</button>
-          <button
-            onClick={() => canvasRef.current && exportNodeAsSvg(canvasRef.current, `${sanitizeFilename(diagramName)}.svg`)}
-            className="px-3 py-1 text-sm bg-slate-100 border border-slate-200 rounded-md hover:bg-slate-200"
-            title="Exportar SVG"
-          >Exportar SVG</button>
+          {/* Export buttons removed */}
         </div>
         {pendingRelationship && (
           <div className="flex items-center gap-2">
@@ -197,6 +195,8 @@ export default function ClassCanvas({
           ref={canvasRef}
           className="relative bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
           style={{
+            width: canvasWidth,
+            height: canvasHeight,
             minWidth: "100%",
             minHeight: "100%",
             cursor: draggingClass ? "grabbing" : "default",
