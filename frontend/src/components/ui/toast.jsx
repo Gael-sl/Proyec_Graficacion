@@ -4,12 +4,14 @@ import { cva } from "class-variance-authority";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const ToastProvider = React.forwardRef(({ ...props }, ref) => (
+const ToastProvider = React.forwardRef(({ children, ...props }, ref) => (
   <div
     ref={ref}
     className="fixed inset-0 z-[100] pointer-events-none"
     {...props}
-  />
+  >
+    {children}
+  </div>
 ));
 ToastProvider.displayName = "ToastProvider";
 
