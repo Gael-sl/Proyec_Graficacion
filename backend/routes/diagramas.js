@@ -59,6 +59,7 @@ function validateAndNormalizeContent(tipo, contenido = {}) {
 }
 
 function parseStoredDiagram(diagrama) {
+  if (!diagrama) return null;
   if (diagrama.contenido) {
     try {
       diagrama.contenido = JSON.parse(diagrama.contenido);
@@ -197,18 +198,29 @@ router.put('/:id', (req, res) => {
     const contenidoNormalizado = validateAndNormalizeContent(tipo, contenido || {});
     const now = new Date().toISOString();
 
-    const stmt = db.prepare(`
+    // Check if the record already exists in the database
+    const existing = db.prepare('SELECT * FROM diagramas WHERE id = ?').get(req.params.id);
+    const contenidoJSON = JSON.stringify(contenidoNormalizado);
+
+    if (!existing) {
+      // Perform INSERT (Upsert logic)
+      const insertStmt = db.prepare(`
+        INSERT INTO diagramas (id, tipo, nombre, descripcion, funcionId, contenido, fechaCreacion, fechaActualizacion)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      insertStmt.run(req.params.id, tipo, nombre, descripcion || null, funcionId || null, contenidoJSON, now, now);
+      
+      const newlyCreated = db.prepare('SELECT * FROM diagramas WHERE id = ?').get(req.params.id);
+      return res.json(parseStoredDiagram(newlyCreated));
+    }
+
+    // Perform UPDATE
+    const updateStmt = db.prepare(`
       UPDATE diagramas
       SET tipo = ?, nombre = ?, descripcion = ?, funcionId = ?, contenido = ?, fechaActualizacion = ?
       WHERE id = ?
     `);
-
-    const contenidoJSON = JSON.stringify(contenidoNormalizado);
-    const result = stmt.run(tipo, nombre, descripcion || null, funcionId || null, contenidoJSON, now, req.params.id);
-
-    if (result.changes === 0) {
-      return res.status(404).json({ error: 'Diagrama not found' });
-    }
+    updateStmt.run(tipo, nombre, descripcion || null, funcionId || null, contenidoJSON, now, req.params.id);
 
     const diagrama = db.prepare('SELECT * FROM diagramas WHERE id = ?').get(req.params.id);
     res.json(parseStoredDiagram(diagrama));

@@ -142,7 +142,7 @@ export default function DiagramaCasosUso() {
   }
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-11rem)] w-full bg-slate-50 flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm">
       <PageHeader
         title={diagramName}
         description="Editor visual UML — arrastra elementos para construir tu diagrama"

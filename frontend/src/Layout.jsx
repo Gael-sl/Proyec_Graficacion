@@ -231,7 +231,7 @@ export default function Layout({ children }) {
 
         {/* Main Content */}
         <main className={cn(
-          "flex-1 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] min-h-screen p-4 pl-0",
+          "flex-1 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] min-h-screen p-4 pl-0 min-w-0 overflow-hidden",
           isSidebarMinimized ? "ml-[7.5rem]" : "ml-[21rem]"
         )}>
           <div className="apple-glass-panel min-h-[calc(100vh-2rem)] w-full p-8 text-slate-800">
