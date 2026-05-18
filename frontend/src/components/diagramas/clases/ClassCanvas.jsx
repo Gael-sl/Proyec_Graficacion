@@ -16,11 +16,33 @@ export default function ClassCanvas({
   diagramName,
 }) {
   const canvasRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const [zoom, setZoom] = useState(1);
   const [draggingClass, setDraggingClass] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [resizingClass, setResizingClass] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [pendingRelationship, setPendingRelationship] = useState(null);
+
+  // Ctrl + Mouse Wheel listener for smooth Miro-style zooming
+  React.useEffect(() => {
+    const handleWheel = (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        setZoom(prev => Math.max(0.4, Math.min(2.5, prev + delta)));
+      }
+    };
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      wrapper.addEventListener("wheel", handleWheel, { passive: false });
+    }
+    return () => {
+      if (wrapper) {
+        wrapper.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, []);
 
   // ── DROP from palette ──────────────────────────────────────────────────────
   const handleDrop = useCallback((e) => {
@@ -29,8 +51,8 @@ export default function ClassCanvas({
     if (!raw) return;
     const item = JSON.parse(raw);
     const rect = canvasRef.current.getBoundingClientRect();
-    const dropX = e.clientX - rect.left;
-    const dropY = e.clientY - rect.top;
+    const dropX = (e.clientX - rect.left) / zoom;
+    const dropY = (e.clientY - rect.top) / zoom;
 
     if (item.kind === "class") {
       const newClass = {
@@ -60,10 +82,12 @@ export default function ClassCanvas({
   const handleClassMouseDown = (e, classItem) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
     setDraggingClass(classItem.id);
     setDragOffset({
-      x: e.clientX - rect.left - classItem.x,
-      y: e.clientY - rect.top - classItem.y,
+      x: mx - classItem.x,
+      y: my - classItem.y,
     });
   };
 
@@ -72,8 +96,8 @@ export default function ClassCanvas({
     (e) => {
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      const mx = (e.clientX - rect.left) / zoom;
+      const my = (e.clientY - rect.top) / zoom;
 
       if (draggingClass) {
         setClasses(prev =>
@@ -103,7 +127,7 @@ export default function ClassCanvas({
         );
       }
     },
-    [draggingClass, dragOffset, resizingClass]
+    [draggingClass, dragOffset, resizingClass, zoom]
   );
 
   const handleMouseUp = () => {
@@ -173,7 +197,34 @@ export default function ClassCanvas({
           <span>Relaciones: {relationships.length}</span>
         </div>
         <div className="flex items-center gap-2">
-          {/* Export buttons removed */}
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+            <button
+              onClick={() => setZoom(prev => Math.max(0.4, prev - 0.1))}
+              className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded font-bold text-xs"
+              title="Zoom -"
+            >
+              -
+            </button>
+            <span className="text-xs font-semibold px-2 text-slate-700 min-w-[40px] text-center select-none">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom(prev => Math.min(2.5, prev + 0.1))}
+              className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded font-bold text-xs"
+              title="Zoom +"
+            >
+              +
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-1"></div>
+            <button
+              onClick={() => setZoom(1.0)}
+              className="text-[10px] text-indigo-600 hover:underline px-1 font-semibold"
+              title="Restablecer"
+            >
+              1:1
+            </button>
+          </div>
         </div>
         {pendingRelationship && (
           <div className="flex items-center gap-2">
@@ -190,86 +241,95 @@ export default function ClassCanvas({
         )}
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6" ref={wrapperRef}>
         <div
-          ref={canvasRef}
-          className="relative bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
           style={{
-            width: canvasWidth,
-            height: canvasHeight,
-            minWidth: "100%",
-            minHeight: "100%",
-            cursor: draggingClass ? "grabbing" : "default",
+            width: canvasWidth * zoom,
+            height: canvasHeight * zoom,
+            position: "relative",
+            borderRadius: "1rem",
           }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClick={() => setSelected(null)}
         >
-          {/* Grid dots */}
-          <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
-            <defs>
-              <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
-                <circle cx="1" cy="1" r="1" fill="#e2e8f0" />
-              </pattern>
-            </defs>
-            <rect width="100%" height="100%" fill="url(#dots)" />
-          </svg>
+          <div
+            ref={canvasRef}
+            className="absolute left-0 top-0 bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
+            style={{
+              width: canvasWidth,
+              height: canvasHeight,
+              cursor: draggingClass ? "grabbing" : "default",
+              transform: `scale(${zoom})`,
+              transformOrigin: "top left",
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onClick={() => setSelected(null)}
+          >
+            {/* Grid dots */}
+            <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
+              <defs>
+                <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+                  <circle cx="1" cy="1" r="1" fill="#e2e8f0" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#dots)" />
+            </svg>
 
-          {/* Relationships (behind classes) */}
-          <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 1, pointerEvents: "none" }}>
-            {relationships.map(rel => (
-              <g
-                key={rel.id}
+            {/* Relationships (behind classes) */}
+            <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 1, pointerEvents: "none" }}>
+              {relationships.map(rel => (
+                <g
+                  key={rel.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelected(rel.id);
+                  }}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation();
+                    setEditTarget({ type: "relationship", item: rel });
+                  }}
+                  style={{ pointerEvents: "auto" }}
+                >
+                  <RelationshipLine
+                    relationship={rel}
+                    classes={classes}
+                    isSelected={selected === rel.id}
+                    onDelete={() => deleteRelationship(rel.id)}
+                  />
+                </g>
+              ))}
+            </svg>
+
+            {/* Classes */}
+            {classes.map(classItem => (
+              <ClassBox
+                key={classItem.id}
+                classItem={classItem}
+                isSelected={selected === classItem.id}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setSelected(rel.id);
+                  if (pendingRelationship) {
+                    handleClassClickForRelationship(classItem.id);
+                  } else {
+                    setSelected(classItem.id);
+                  }
                 }}
-                onDoubleClick={(e) => {
-                  e.stopPropagation();
-                  setEditTarget({ type: "relationship", item: rel });
+                onDoubleClick={() => setEditTarget({ type: "class", item: classItem })}
+                onDelete={() => deleteClass(classItem.id)}
+                onDuplicate={() => duplicateClass(classItem)}
+                onMouseDown={(e) => {
+                  if (e.target.dataset.resize) {
+                    e.stopPropagation();
+                    setResizingClass({ id: classItem.id });
+                  } else {
+                    handleClassMouseDown(e, classItem);
+                  }
                 }}
-                style={{ pointerEvents: "auto" }}
-              >
-                <RelationshipLine
-                  relationship={rel}
-                  classes={classes}
-                  isSelected={selected === rel.id}
-                  onDelete={() => deleteRelationship(rel.id)}
-                />
-              </g>
+              />
             ))}
-          </svg>
-
-          {/* Classes */}
-          {classes.map(classItem => (
-            <ClassBox
-              key={classItem.id}
-              classItem={classItem}
-              isSelected={selected === classItem.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                if (pendingRelationship) {
-                  handleClassClickForRelationship(classItem.id);
-                } else {
-                  setSelected(classItem.id);
-                }
-              }}
-              onDoubleClick={() => setEditTarget({ type: "class", item: classItem })}
-              onDelete={() => deleteClass(classItem.id)}
-              onDuplicate={() => duplicateClass(classItem)}
-              onMouseDown={(e) => {
-                if (e.target.dataset.resize) {
-                  e.stopPropagation();
-                  setResizingClass({ id: classItem.id });
-                } else {
-                  handleClassMouseDown(e, classItem);
-                }
-              }}
-            />
-          ))}
+          </div>
         </div>
       </div>
 

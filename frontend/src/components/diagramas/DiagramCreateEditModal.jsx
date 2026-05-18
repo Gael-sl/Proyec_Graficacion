@@ -63,11 +63,15 @@ export default function DiagramCreateEditModal({ type, diagram, onSave, onClose 
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/60 bg-gradient-to-r from-sky-500/80 via-cyan-400/75 to-indigo-500/80 backdrop-blur-xl">
-          <div className="flex items-center gap-2 text-white">
-            <h3 className="font-semibold">{title}</h3>
+        <div className="flex items-center justify-between px-6 py-5 border-b border-slate-200/60 bg-white/75 backdrop-blur-2xl">
+          <div className="flex flex-col gap-0.5">
+            <h3 className="text-lg font-bold text-slate-800 tracking-tight">{title}</h3>
+            <p className="text-xs text-slate-500 font-medium">Especifica el modelo conceptual de tu diagrama UML</p>
           </div>
-          <button onClick={onClose} className="text-white/80 hover:text-white transition-colors rounded-lg hover:bg-white/15 p-1">
+          <button 
+            onClick={onClose} 
+            className="text-slate-400 hover:text-slate-700 hover:bg-slate-100/80 transition-all rounded-xl p-1.5"
+          >
             <X className="w-5 h-5" />
           </button>
         </div>

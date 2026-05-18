@@ -12,11 +12,50 @@ export default function RelationshipLine({
 
   if (!fromClass || !toClass) return null;
 
-  // Calcular posiciones
-  const fromX = fromClass.x + fromClass.width / 2;
-  const fromY = fromClass.y + fromClass.height / 2;
-  const toX = toClass.x + toClass.width / 2;
-  const toY = toClass.y + toClass.height / 2;
+  // Calcular centros de los elementos
+  const fromCenterX = fromClass.x + fromClass.width / 2;
+  const fromCenterY = fromClass.y + fromClass.height / 2;
+  const toCenterX = toClass.x + toClass.width / 2;
+  const toCenterY = toClass.y + toClass.height / 2;
+
+  const dx = toCenterX - fromCenterX;
+  const dy = toCenterY - fromCenterY;
+
+  let fromX = fromCenterX;
+  let fromY = fromCenterY;
+  let toX = toCenterX;
+  let toY = toCenterY;
+
+  // Calcular intersección con borde de Clase Origen
+  if (dx !== 0 || dy !== 0) {
+    const tV = Math.abs(dx) > 0 ? (fromClass.width / 2) / Math.abs(dx) : Infinity;
+    const tH = Math.abs(dy) > 0 ? (fromClass.height / 2) / Math.abs(dy) : Infinity;
+    const t = Math.min(tV, tH);
+    if (t < 1) {
+      fromX = fromCenterX + t * dx;
+      fromY = fromCenterY + t * dy;
+    }
+  }
+
+  // Calcular intersección con borde de Clase Destino
+  if (dx !== 0 || dy !== 0) {
+    const tV = Math.abs(dx) > 0 ? (toClass.width / 2) / Math.abs(dx) : Infinity;
+    const tH = Math.abs(dy) > 0 ? (toClass.height / 2) / Math.abs(dy) : Infinity;
+    const t = Math.min(tV, tH);
+    if (t < 1) {
+      toX = toCenterX - t * dx;
+      toY = toCenterY - t * dy;
+    }
+  }
+
+  // Desplazar punta de flecha 10px hacia atrás para que no quede solapada por el borde
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len > 0) {
+    toX = toX - (dx / len) * 10;
+    toY = toY - (dy / len) * 10;
+    fromX = fromX + (dx / len) * 10;
+    fromY = fromY + (dy / len) * 10;
+  }
 
   // Calcular punto medio para label
   const midX = fromX + (toX - fromX) / 2;

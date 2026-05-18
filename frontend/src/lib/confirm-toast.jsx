@@ -12,7 +12,7 @@ export function confirmToast({
       title,
       description,
       action: (
-        <div className="flex items-center gap-3 mt-4">
+        <div className="flex items-center gap-3 mt-2.5">
           <button
             type="button"
             className="toast-action-button flex-1"

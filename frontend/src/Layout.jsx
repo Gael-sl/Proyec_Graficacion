@@ -94,6 +94,12 @@ export default function Layout({ children }) {
   };
 
   const toggleExpand = (name) => {
+    if (isSidebarMinimized) {
+      setIsSidebarMinimized(false);
+      // Solo expandir el menú clickeado y colapsar los demás
+      setExpandedItems([name]);
+      return;
+    }
     setExpandedItems(prev =>
       prev.includes(name)
         ? prev.filter(item => item !== name)

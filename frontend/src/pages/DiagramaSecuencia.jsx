@@ -149,11 +149,12 @@ export default function DiagramaSecuencia() {
   }
 
   return (
-    <div className="h-[calc(100vh-11rem)] w-full bg-slate-50 flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm">
+    <div className="h-[calc(100vh-7.5rem)] w-full bg-slate-50 flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 shadow-sm">
       <PageHeader
         title={diagramName}
         description="Editor visual UML — arrastra componentes al canvas para construir tu diagrama"
         icon={GitBranch}
+        className="px-6 py-4 mb-2"
       >
         <Button
           onClick={handleBack}

@@ -6,13 +6,14 @@ export default function PageHeader({
   title, 
   description, 
   icon: Icon,
-  onSave,
-  onNew,
+  onSave = null,
+  onNew = null,
   saving = false,
+  className = "",
   children
 }) {
   return (
-    <div className="apple-glass-panel border-b border-white/60 px-8 py-6 mb-6">
+    <div className={`apple-glass-panel border-b border-white/60 ${className || "px-8 py-6 mb-6"}`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-5">
           {Icon && (
