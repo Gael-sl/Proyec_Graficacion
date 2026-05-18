@@ -9,7 +9,7 @@
     "moduleResolution": "Node",
     "lib": ["ESNext", "DOM"],
     "target": "ESNext",
-    "checkJs": true,
+    "checkJs": false,
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,

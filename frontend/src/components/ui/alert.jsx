@@ -19,6 +19,9 @@ const alertVariants = cva(
   }
 )
 
+/**
+ * @type {React.ForwardRefExoticComponent<{ className?: string, variant?: "default" | "destructive" } & React.HTMLAttributes<HTMLDivElement>>}
+ */
 const Alert = React.forwardRef(({ className, variant, ...props }, ref) => (
   <div
     ref={ref}
@@ -28,6 +31,9 @@ const Alert = React.forwardRef(({ className, variant, ...props }, ref) => (
 ))
 Alert.displayName = "Alert"
 
+/**
+ * @type {React.ForwardRefExoticComponent<{ className?: string } & React.HTMLAttributes<HTMLHeadingElement>>}
+ */
 const AlertTitle = React.forwardRef(({ className, ...props }, ref) => (
   <h5
     ref={ref}
@@ -36,6 +42,9 @@ const AlertTitle = React.forwardRef(({ className, ...props }, ref) => (
 ))
 AlertTitle.displayName = "AlertTitle"
 
+/**
+ * @type {React.ForwardRefExoticComponent<{ className?: string } & React.HTMLAttributes<HTMLDivElement>>}
+ */
 const AlertDescription = React.forwardRef(({ className, ...props }, ref) => (
   <div
     ref={ref}
