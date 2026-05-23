@@ -215,29 +215,29 @@ function buildAuthConfig(authId, roles, credentials = {}) {
 Se requiere implementar un sistema de Autenticación y Control de Acceso completo. El agente debe generar el código con las siguientes especificaciones técnicas de producción:
 
 1. ARCHIVO .ENV DE PRODUCCIÓN (CREADO POR EL AGENTE):
-DEBES crear directamente el archivo \`.env\` con estos valores reales listos para funcionar:
+DEBES crear directamente el archivo \`.env\` con las variables necesarias para que el sistema funcione. Deja los valores listos para que yo pegue mis credenciales (ejemplo: credenciales de gmail para enviar correos):
 \`\`\`env
 # Autenticación
-${selectedEnvVars.filter(v => !v.startsWith("SMTP") && v !== "EMAIL_FROM").map(v => `${v}=${getVal(v)}`).join("\n")}
+${selectedEnvVars.filter(v => !v.startsWith("SMTP") && v !== "EMAIL_FROM").map(v => `${v}="pegar_credencial_aqui"`).join("\n")}
 
 # Configuración de Servidor de Correos (SMTP) para Recuperación de Contraseña
-${selectedEnvVars.filter(v => v.startsWith("SMTP") || v === "EMAIL_FROM").map(v => `${v}=${getVal(v)}`).join("\n")}
+${selectedEnvVars.filter(v => v.startsWith("SMTP") || v === "EMAIL_FROM").map(v => `${v}="pegar_credencial_aqui"`).join("\n")}
 \`\`\`
 
 2. FLUJO DE RECUPERACIÓN DE CONTRASEÑA (EMAIL OTP):
 INSTRUCCIÓN CRÍTICA: Implementa un flujo completo de "Recuperar Contraseña" funcional:
 - El usuario podrá dar clic en "¿Olvidaste tu contraseña?".
-- El sistema solicitará su correo y, utilizando la librería \`nodemailer\` (o similar según stack), enviará un correo con un token numérico de seguridad temporal (OTP).
+- El sistema solicitará su correo y enviará un correo con un token numérico de seguridad temporal (OTP).
 - El usuario ingresará el código en la pantalla de verificación para poder definir de forma segura su nueva contraseña.
 
 3. LOGIN HÍBRIDO Y BYPASS DE DESARROLLO:
 ${isGoogle ? `- MODO HÍBRIDO: Integra el login tradicional (Correo/Contraseña) junto con el botón de "Google Sign-In".
-- BYPASS DE SEGURIDAD EN DESARROLLO: Si las credenciales de Google o SMTP no están configuradas en el \`.env\` local, el sistema debe alertar en consola de desarrollo y permitir un bypass rápido (usando un botón "Demo" o detectando credenciales mock) para que la UI se pueda probar instantáneamente sin configurar APIs.` : ""}
+- BYPASS DE SEGURIDAD EN DESARROLLO: Si las credenciales no están configuradas en el \`.env\` local, el sistema debe alertar en consola de desarrollo y permitir un bypass rápido.` : ""}
 
 4. USUARIO ADMINISTRADOR DE PRUEBA (SEEDER):
-Crea un script (seeder) de base de datos que inserte un usuario administrador por defecto:
-- Correo: admin@demo.com
-- Password: password123
+Crea un script (seeder) de base de datos que inserte un usuario administrador por defecto para poder entrar y probar:
+- Correo: dentista@demo.com o dentista (según el login)
+- Password: dental123
 
 === CONTROL DE ACCESO BASADO EN ROLES (RBAC) ===
 Definición de redirecciones post-login:
@@ -439,34 +439,7 @@ export default function GeneradorPrompt() {
               <Input value={projectDescription} onChange={e => setProjectDescription(e.target.value)} className="text-xs h-10" placeholder="Descripción" />
             </div>
 
-            <div className="apple-glass-card p-6 bg-white space-y-4">
-              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-2">Variables de Entorno (.env)</h3>
-              <p className="text-[10px] text-slate-500 font-medium mb-2">Escribe tus credenciales reales aquí si deseas que se incluyan directamente en el archivo .env autogenerado por el prompt:</p>
-              
-              {selections.auth === "google-oauth" && (
-                <div className="space-y-3">
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-slate-600 uppercase">Google Client ID</label>
-                    <Input value={googleClientId} onChange={e => setGoogleClientId(e.target.value)} className="text-xs h-9 font-mono" placeholder="123456-abc.apps.googleusercontent.com" />
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[9px] font-bold text-slate-600 uppercase">Google Client Secret</label>
-                    <Input value={googleClientSecret} onChange={e => setGoogleClientSecret(e.target.value)} type="password" className="text-xs h-9 font-mono" placeholder="••••••••••••••••" />
-                  </div>
-                </div>
-              )}
 
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-600 uppercase">SMTP Email / Usuario</label>
-                  <Input value={smtpUser} onChange={e => setSmtpUser(e.target.value)} className="text-xs h-9 font-mono" placeholder="ejemplo@gmail.com" />
-                </div>
-                <div className="space-y-1">
-                  <label className="text-[9px] font-bold text-slate-600 uppercase">SMTP Contraseña / App Password</label>
-                  <Input value={smtpPass} onChange={e => setSmtpPass(e.target.value)} type="password" className="text-xs h-9 font-mono" placeholder="••••••••••••••••" />
-                </div>
-              </div>
-            </div>
 
             <div className="space-y-4">
               <TechPicker title="Autenticación" icon={ShieldCheck} options={AUTH_OPTIONS} value={selections.auth} onChange={v => setSelections(s => ({ ...s, auth: v }))} />
@@ -503,8 +476,6 @@ export default function GeneradorPrompt() {
                   />
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400">
-                    <Bot className="w-16 h-16 mb-4 text-slate-300" />
-                    <p className="font-medium text-slate-500">Haz clic en Sincronizar y Generar para crear el prompt.</p>
                   </div>
                 )}
               </div>

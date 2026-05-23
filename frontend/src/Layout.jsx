@@ -178,7 +178,7 @@ export default function Layout({ children }) {
             {isSidebarMinimized ? (
               <div className="flex flex-col items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/40 border border-white/60 shadow-sm overflow-hidden flex-shrink-0">
-                  <img src="/favicon.png" alt="GeraSoft Logo" className="w-8 h-8 object-contain" />
+                  <img src="/gerasoft-logo.jpeg" alt="GeraSoft Logo" className="w-8 h-8 object-contain" />
                 </div>
                 <button
                   type="button"
@@ -194,7 +194,7 @@ export default function Layout({ children }) {
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 transition-all duration-300 min-w-0">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/40 border border-white/60 shadow-sm overflow-hidden flex-shrink-0">
-                    <img src="/favicon.png" alt="GeraSoft Logo" className="w-8 h-8 object-contain" />
+                    <img src="/gerasoft-logo.jpeg" alt="GeraSoft Logo" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="overflow-hidden">
                     <h1 className="text-slate-900 font-bold text-lg tracking-tighter whitespace-nowrap">GeraSoft</h1>
@@ -218,20 +218,7 @@ export default function Layout({ children }) {
           {navigationItems.map((item) => renderNavItem(item))}
         </nav>
 
-        {/* Footer */}
-        {!isSidebarMinimized && (
-          <div className="p-4 border-t border-white/60 shrink-0">
-            <div className="flex items-center gap-3 px-4 py-3 rounded-xl glass-subtle">
-              <div className="w-8 h-8 bg-gradient-to-br from-indigo-400 to-purple-400 rounded-lg flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
-                {currentProject?.name?.charAt(0).toUpperCase() || 'G'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-900 font-medium truncate">{currentProject?.name || 'Mi Proyecto'}</p>
-                <p className="text-xs text-slate-500 font-bold tracking-tighter">ENGINE v2.0</p>
-              </div>
-            </div>
-          </div>
-        )}
+
       </aside>
 
         {/* Main Content */}

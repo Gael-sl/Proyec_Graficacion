@@ -7,48 +7,57 @@ export default function ClassBox({ classItem, isSelected, onClick, onDoubleClick
 
   return (
     <div
-      className={`absolute bg-white border-2 rounded-sm shadow-sm transition-all cursor-pointer select-none group ${isSelected ? "border-blue-600 ring-2 ring-blue-100" : "border-slate-800"}`}
+      className="absolute"
       style={{
         left: classItem.x,
         top: classItem.y,
         width: classItem.width,
         height: classItem.height,
         zIndex: isSelected ? 100 : 10,
-        display: "flex",
-        flexDirection: "column",
       }}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
       onMouseDown={onMouseDown}
     >
-      {/* Header */}
-      <div className={`${headerColor} px-3 py-1.5 flex flex-col items-center justify-center border-b-2 border-slate-800 text-center rounded-t-[2px]`}>
-        {classItem.type === "interface" && <span className="text-[10px] italic text-slate-800">&laquo;interface&raquo;</span>}
-        {classItem.type === "abstract" && <span className="text-[10px] italic text-slate-800">&laquo;abstract&raquo;</span>}
-        {classItem.type === "enum" && <span className="text-[10px] italic text-slate-800">&laquo;enum&raquo;</span>}
-        <p className={`font-bold text-[13px] text-slate-900 truncate w-full ${classItem.type === "abstract" ? "italic" : ""}`}>{classItem.name}</p>
-      </div>
+      <div
+        className={`w-full h-full bg-white border-2 rounded-sm shadow-sm transition-all cursor-pointer select-none group flex flex-col ${isSelected ? "border-blue-600 ring-2 ring-blue-100" : "border-slate-800"}`}
+        onClick={onClick}
+        onDoubleClick={onDoubleClick}
+      >
+        {/* Header */}
+        <div className={`${headerColor} px-3 py-1.5 flex flex-col items-center justify-center border-b-2 border-slate-800 text-center rounded-t-[2px]`}>
+          {classItem.type === "interface" && <span className="text-[10px] italic text-slate-800">&laquo;interface&raquo;</span>}
+          {classItem.type === "abstract" && <span className="text-[10px] italic text-slate-800">&laquo;abstract&raquo;</span>}
+          {classItem.type === "enum" && <span className="text-[10px] italic text-slate-800">&laquo;enum&raquo;</span>}
+          <p className={`font-bold text-[13px] text-slate-900 truncate w-full ${classItem.type === "abstract" ? "italic" : ""}`}>{classItem.name}</p>
+        </div>
 
-      {/* Atributos */}
-      <div className="flex-1 px-2 py-1.5 text-[11px] leading-tight overflow-hidden">
-        {classItem.attributes && classItem.attributes.length > 0 ? (
-          classItem.attributes.map((attr, i) => (
-            <p key={i} className="text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">
-              {attr.visibility || '-'} {attr.name}: {attr.type || 'any'}
-            </p>
-          ))
-        ) : null}
-      </div>
+        {/* Atributos */}
+        <div className="flex-1 px-2 py-1.5 text-[11px] leading-tight overflow-hidden">
+          {classItem.attributes && classItem.attributes.length > 0 ? (
+            classItem.attributes.map((attr, i) => (
+              <p key={i} className="text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">
+                {attr.visibility || '-'} {attr.name}: {attr.type || 'any'}
+              </p>
+            ))
+          ) : null}
+        </div>
 
-      {/* Métodos */}
-      <div className="flex-1 px-2 py-1.5 text-[11px] leading-tight border-t-2 border-slate-800 overflow-hidden">
-        {classItem.methods && classItem.methods.length > 0 ? (
-          classItem.methods.map((method, i) => (
-            <p key={i} className="text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">
-              {method.visibility || '+'} {method.name}()
-            </p>
-          ))
-        ) : null}
+        {/* Métodos */}
+        <div className="flex-1 px-2 py-1.5 text-[11px] leading-tight border-t-2 border-slate-800 overflow-hidden">
+          {classItem.methods && classItem.methods.length > 0 ? (
+            classItem.methods.map((method, i) => (
+              <p key={i} className="text-slate-900 whitespace-nowrap overflow-hidden text-ellipsis">
+                {method.visibility || '+'} {method.name}()
+              </p>
+            ))
+          ) : null}
+        </div>
+
+        {/* Resize handle */}
+        <div
+          data-resize="true"
+          className="absolute bottom-0 right-0 w-3 h-3 bg-slate-300 rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
+          title="Redimensionar"
+        />
       </div>
 
       {/* Action buttons */}
@@ -74,13 +83,6 @@ export default function ClassBox({ classItem, isSelected, onClick, onDoubleClick
           </button>
         </div>
       )}
-
-      {/* Resize handle */}
-      <div
-        data-resize="true"
-        className="absolute bottom-0 right-0 w-3 h-3 bg-slate-300 rounded-tl cursor-nwse-resize opacity-0 group-hover:opacity-100 transition-opacity"
-        title="Redimensionar"
-      />
     </div>
   );
 }

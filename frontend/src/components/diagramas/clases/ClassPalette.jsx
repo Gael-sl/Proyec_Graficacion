@@ -66,11 +66,7 @@ export default function ClassPalette() {
         </div>
       </div>
 
-      <div className="p-4 border-t border-slate-100 bg-slate-50 shrink-0">
-        <p className="text-xs text-slate-400 leading-relaxed">
-          Arrastra elementos al canvas. Doble clic para editar. Clic para seleccionar.
-        </p>
-      </div>
+
     </aside>
   );
 }

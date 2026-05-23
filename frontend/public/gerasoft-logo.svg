@@ -1,0 +1,15 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Logo GS -->
+  <defs>
+    <linearGradient id="gradGS" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#001f4d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0066ff;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- G (curved left) -->
+  <path d="M 60 40 C 40 40, 30 55, 30 75 C 30 95, 40 110, 60 110 L 85 110" fill="none" stroke="url(#gradGS)" stroke-width="18" stroke-linecap="round"/>
+  
+  <!-- S (right side) -->
+  <path d="M 120 50 C 135 50, 150 60, 150 75 C 150 85, 145 95, 135 100 C 145 105, 150 115, 150 125 C 150 140, 135 150, 120 150 C 105 150, 90 140, 90 125" fill="none" stroke="url(#gradGS)" stroke-width="18" stroke-linecap="round"/>
+</svg>
