@@ -23,30 +23,25 @@ export default function MessageArrow({ msg, fromX, toX, y, isSelected, onClick, 
     // Self-loop
     const loopW = 50;
     return (
-      <g
-        style={{ cursor: "pointer", position: "absolute" }}
+      <svg
+        className="absolute"
+        style={{ left: fromX, top: y - 10, zIndex: 3, cursor: "pointer", overflow: "visible" }}
+        width={loopW + 20}
+        height={40}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
       >
-        <svg
-          className="absolute"
-          style={{ left: fromX, top: y - 10, zIndex: 3 }}
-          width={loopW + 20}
-          height={40}
-          overflow="visible"
-        >
-          <path
-            d={`M 0 10 L ${loopW} 10 L ${loopW} 30 L 4 30`}
-            fill="none"
-            stroke={style.stroke}
-            strokeWidth={isSelected ? 2.5 : 1.5}
-            strokeDasharray={style.dash}
-            markerEnd="url(#arrowhead)"
-          />
-          <text x={loopW / 2} y={-2} textAnchor="middle" fontSize="11" fill={style.stroke} fontWeight="500">{msg.label}</text>
-        </svg>
+        <path
+          d={`M 0 10 L ${loopW} 10 L ${loopW} 30 L 4 30`}
+          fill="none"
+          stroke={style.stroke}
+          strokeWidth={isSelected ? 2.5 : 1.5}
+          strokeDasharray={style.dash}
+          markerEnd="url(#arrowhead)"
+        />
+        <text x={loopW / 2} y={-2} textAnchor="middle" fontSize="11" fill={style.stroke} fontWeight="500">{msg.label}</text>
         {isSelected && (
-          <foreignObject x={fromX + loopW + 4} y={y - 10} width={24} height={24} style={{ zIndex: 20 }}>
+          <foreignObject x={loopW + 4} y={0} width={24} height={24} style={{ zIndex: 20 }}>
             <button
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               className="w-6 h-6 bg-white border border-red-200 rounded-full flex items-center justify-center shadow hover:bg-red-50 transition-colors"
@@ -55,7 +50,7 @@ export default function MessageArrow({ msg, fromX, toX, y, isSelected, onClick, 
             </button>
           </foreignObject>
         )}
-      </g>
+      </svg>
     );
   }
 
