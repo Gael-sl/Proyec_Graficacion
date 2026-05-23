@@ -46,7 +46,7 @@ export default function CanvasToolbar({ pendingMessage, onCancelPending, actorCo
           </button>
         </div>
 
-        {pendingMessage ? (
+        {pendingMessage && (
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 rounded-lg px-3 py-1.5">
               <Info className="w-4 h-4 text-indigo-500" />
@@ -59,10 +59,6 @@ export default function CanvasToolbar({ pendingMessage, onCancelPending, actorCo
             <Button variant="outline" size="sm" onClick={onCancelPending} className="gap-1">
               <X className="w-3 h-3" /> Cancelar
             </Button>
-          </div>
-        ) : (
-          <div className="text-xs text-slate-400">
-            Doble clic para editar · Clic para seleccionar · Arrastra para mover
           </div>
         )}
       </div>

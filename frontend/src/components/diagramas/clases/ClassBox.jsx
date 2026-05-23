@@ -7,7 +7,7 @@ export default function ClassBox({ classItem, isSelected, onClick, onDoubleClick
 
   return (
     <div
-      className={`absolute bg-white border-2 rounded-sm shadow-sm transition-all cursor-pointer select-none group overflow-hidden ${isSelected ? "border-blue-600 ring-2 ring-blue-100" : "border-slate-800"}`}
+      className={`absolute bg-white border-2 rounded-sm shadow-sm transition-all cursor-pointer select-none group ${isSelected ? "border-blue-600 ring-2 ring-blue-100" : "border-slate-800"}`}
       style={{
         left: classItem.x,
         top: classItem.y,
@@ -22,7 +22,7 @@ export default function ClassBox({ classItem, isSelected, onClick, onDoubleClick
       onMouseDown={onMouseDown}
     >
       {/* Header */}
-      <div className={`${headerColor} px-3 py-1.5 flex flex-col items-center justify-center border-b-2 border-slate-800 text-center`}>
+      <div className={`${headerColor} px-3 py-1.5 flex flex-col items-center justify-center border-b-2 border-slate-800 text-center rounded-t-[2px]`}>
         {classItem.type === "interface" && <span className="text-[10px] italic text-slate-800">&laquo;interface&raquo;</span>}
         {classItem.type === "abstract" && <span className="text-[10px] italic text-slate-800">&laquo;abstract&raquo;</span>}
         {classItem.type === "enum" && <span className="text-[10px] italic text-slate-800">&laquo;enum&raquo;</span>}
