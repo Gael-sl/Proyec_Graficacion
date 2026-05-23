@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { exportNodeAsPng, exportNodeAsSvg, sanitizeFilename } from "@/lib/exporter";
 import ActorColumn from "./ActorColumn";
 import MessageArrow from "./MessageArrow";
@@ -16,8 +16,30 @@ export default function SequenceCanvas({
   actors, setActors, messages, setMessages, selected, setSelected, diagramName
 }) {
   const canvasRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const [zoom, setZoom] = useState(1);
   const [draggingActor, setDraggingActor] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0 });
+
+  // Ctrl + Mouse Wheel listener for smooth Miro-style zooming
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        setZoom(prev => Math.max(0.4, Math.min(2.5, prev + delta)));
+      }
+    };
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      wrapper.addEventListener("wheel", handleWheel, { passive: false });
+    }
+    return () => {
+      if (wrapper) {
+        wrapper.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, []);
 
   const [fragments, setFragments] = useState([]);
   const [notes, setNotes] = useState([]);
@@ -40,8 +62,8 @@ export default function SequenceCanvas({
     if (!raw) return;
     const item = JSON.parse(raw);
     const rect = canvasRef.current.getBoundingClientRect();
-    const dropX = e.clientX - rect.left;
-    const dropY = e.clientY - rect.top;
+    const dropX = (e.clientX - rect.left) / zoom;
+    const dropY = (e.clientY - rect.top) / zoom;
 
     if (item.kind === "actor") {
       const x = dropX - ACTOR_WIDTH / 2;
@@ -105,30 +127,35 @@ export default function SequenceCanvas({
   const handleActorMouseDown = (e, actor) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / zoom;
     setDraggingActor(actor.id);
-    setDragOffset({ x: e.clientX - rect.left - actor.x });
+    setDragOffset({ x: mx - actor.x });
   };
 
   // ── FRAGMENT drag ─────────────────────────────────────────────────────────
   const handleFragmentMouseDown = (e, frag) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
-    setDraggingFragment({ id: frag.id, ox: e.clientX - rect.left - frag.x, oy: e.clientY - rect.top - frag.y });
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
+    setDraggingFragment({ id: frag.id, ox: mx - frag.x, oy: my - frag.y });
   };
 
   // ── NOTE drag ─────────────────────────────────────────────────────────────
   const handleNoteMouseDown = (e, note) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
-    setDraggingNote({ id: note.id, ox: e.clientX - rect.left - note.x, oy: e.clientY - rect.top - note.y });
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
+    setDraggingNote({ id: note.id, ox: mx - note.x, oy: my - note.y });
   };
 
   // ── MOUSE MOVE ────────────────────────────────────────────────────────────
   const handleMouseMove = useCallback((e) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
 
     if (draggingActor) {
       setActors(prev => prev.map(a => a.id === draggingActor ? { ...a, x: Math.max(20, mx - dragOffset.x) } : a));
@@ -148,7 +175,7 @@ export default function SequenceCanvas({
         ? { ...f, width: Math.max(80, mx - f.x), height: Math.max(60, my - f.y) }
         : f));
     }
-  }, [draggingActor, dragOffset, draggingFragment, draggingNote, resizingFragment]);
+  }, [draggingActor, dragOffset, draggingFragment, draggingNote, resizingFragment, zoom]);
 
   const handleMouseUp = () => {
     setDraggingActor(null);
@@ -218,20 +245,36 @@ export default function SequenceCanvas({
         onCancelPending={() => setPendingMessage(null)}
         actorCount={actors.length}
         messageCount={messages.length}
+        zoom={zoom}
+        setZoom={setZoom}
       />
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6" ref={wrapperRef}>
         <div
-          ref={canvasRef}
-          className="relative bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
-          style={{ minWidth: '100%', minHeight: '100%', width: canvasWidth, height: canvasHeight, cursor: draggingActor ? "grabbing" : "default" }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClick={() => setSelected(null)}
+          style={{
+            width: canvasWidth * zoom,
+            height: canvasHeight * zoom,
+            position: "relative",
+            borderRadius: "1rem",
+          }}
         >
+          <div
+            ref={canvasRef}
+            className="absolute left-0 top-0 bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
+            style={{
+              width: canvasWidth,
+              height: canvasHeight,
+              cursor: draggingActor ? "grabbing" : "default",
+              transform: `scale(${zoom})`,
+              transformOrigin: "top left",
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onClick={() => setSelected(null)}
+          >
           {/* Grid dots */}
           <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
             <defs>
@@ -364,6 +407,7 @@ export default function SequenceCanvas({
               <p className="text-sm mt-1">Arrastra participantes desde la paleta izquierda</p>
             </div>
           )}
+          </div>
         </div>
       </div>
 

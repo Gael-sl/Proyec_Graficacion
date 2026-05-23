@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { exportNodeAsPng, exportNodeAsSvg, sanitizeFilename } from "@/lib/exporter";
 import PackageBox from "./PackageBox";
 import RelationshipLine from "./RelationshipLine";
@@ -17,12 +17,34 @@ export default function PackageCanvas({
   diagramName,
 }) {
   const canvasRef = useRef(null);
+  const wrapperRef = useRef(null);
+  const [zoom, setZoom] = useState(1);
   const [draggingElement, setDraggingElement] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [draggingNote, setDraggingNote] = useState(null);
   const [resizingElement, setResizingElement] = useState(null);
   const [editTarget, setEditTarget] = useState(null);
   const [pendingRelationship, setPendingRelationship] = useState(null);
+
+  // Ctrl + Mouse Wheel listener for smooth Miro-style zooming
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        setZoom(prev => Math.max(0.4, Math.min(2.5, prev + delta)));
+      }
+    };
+    const wrapper = wrapperRef.current;
+    if (wrapper) {
+      wrapper.addEventListener("wheel", handleWheel, { passive: false });
+    }
+    return () => {
+      if (wrapper) {
+        wrapper.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, []);
 
   // ── DROP from palette ──────────────────────────────────────────────────────
   const handleDrop = useCallback((e) => {
@@ -31,8 +53,8 @@ export default function PackageCanvas({
     if (!raw) return;
     const item = JSON.parse(raw);
     const rect = canvasRef.current.getBoundingClientRect();
-    const dropX = e.clientX - rect.left;
-    const dropY = e.clientY - rect.top;
+    const dropX = (e.clientX - rect.left) / zoom;
+    const dropY = (e.clientY - rect.top) / zoom;
 
     if (item.kind === "element") {
       const newElement = {
@@ -74,10 +96,12 @@ export default function PackageCanvas({
   const handleElementMouseDown = (e, element) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
     setDraggingElement(element.id);
     setDragOffset({
-      x: e.clientX - rect.left - element.x,
-      y: e.clientY - rect.top - element.y,
+      x: mx - element.x,
+      y: my - element.y,
     });
   };
 
@@ -85,10 +109,12 @@ export default function PackageCanvas({
   const handleNoteMouseDown = (e, note) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
     setDraggingNote({
       id: note.id,
-      ox: e.clientX - rect.left - note.x,
-      oy: e.clientY - rect.top - note.y,
+      ox: mx - note.x,
+      oy: my - note.y,
     });
   };
 
@@ -97,8 +123,8 @@ export default function PackageCanvas({
     (e) => {
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
-      const mx = e.clientX - rect.left;
-      const my = e.clientY - rect.top;
+      const mx = (e.clientX - rect.left) / zoom;
+      const my = (e.clientY - rect.top) / zoom;
 
       if (draggingElement) {
         setPackages(prev =>
@@ -142,7 +168,7 @@ export default function PackageCanvas({
         );
       }
     },
-    [draggingElement, dragOffset, draggingNote, resizingElement]
+    [draggingElement, dragOffset, draggingNote, resizingElement, zoom]
   );
 
   const handleMouseUp = () => {
@@ -223,7 +249,34 @@ export default function PackageCanvas({
           <span>Notas: {notes.length}</span>
         </div>
         <div className="flex items-center gap-2">
-          {/* Export buttons removed */}
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+            <button
+              onClick={() => setZoom(prev => Math.max(0.4, prev - 0.1))}
+              className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded font-bold text-xs"
+              title="Zoom -"
+            >
+              -
+            </button>
+            <span className="text-xs font-semibold px-2 text-slate-700 min-w-[40px] text-center select-none">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom(prev => Math.min(2.5, prev + 0.1))}
+              className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded font-bold text-xs"
+              title="Zoom +"
+            >
+              +
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-1"></div>
+            <button
+              onClick={() => setZoom(1.0)}
+              className="text-[10px] text-indigo-600 hover:underline px-1 font-semibold"
+              title="Restablecer"
+            >
+              1:1
+            </button>
+          </div>
         </div>
         {pendingRelationship && (
           <div className="flex items-center gap-2">
@@ -240,24 +293,32 @@ export default function PackageCanvas({
         )}
       </div>
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-6" ref={wrapperRef}>
         <div
-          ref={canvasRef}
-          className="relative bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
           style={{
-            width: canvasWidth,
-            height: canvasHeight,
-            minWidth: "100%",
-            minHeight: "100%",
-            cursor: draggingElement ? "grabbing" : "default",
+            width: canvasWidth * zoom,
+            height: canvasHeight * zoom,
+            position: "relative",
+            borderRadius: "1rem",
           }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClick={() => setSelected(null)}
         >
+          <div
+            ref={canvasRef}
+            className="absolute left-0 top-0 bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
+            style={{
+              width: canvasWidth,
+              height: canvasHeight,
+              cursor: draggingElement ? "grabbing" : "default",
+              transform: `scale(${zoom})`,
+              transformOrigin: "top left",
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onClick={() => setSelected(null)}
+          >
           {/* Grid dots */}
           <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
             <defs>
@@ -343,6 +404,7 @@ export default function PackageCanvas({
               }}
             />
           ))}
+          </div>
         </div>
       </div>
 

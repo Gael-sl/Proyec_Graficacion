@@ -16,8 +16,6 @@ import {
   RefreshCw,
   Server,
   ShieldCheck,
-  Zap,
-  Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -404,9 +402,6 @@ export default function GeneradorPrompt() {
       <div className="bg-white/80 backdrop-blur-md border border-white/50 shadow-sm sticky top-0 z-50 rounded-2xl mb-8">
         <div className="px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-lg">
-              <Wand2 className="w-5 h-5" />
-            </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Generador de prompt</h1>
               <p className="text-xs text-slate-500 font-medium">Consolida tu levantamiento de requerimientos</p>

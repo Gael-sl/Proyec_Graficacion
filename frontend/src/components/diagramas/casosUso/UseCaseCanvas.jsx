@@ -21,6 +21,7 @@ export default function UseCaseCanvas({
 }) {
   const canvasRef = useRef(null);
   const scrollContainerRef = useRef(null);
+  const [zoom, setZoom] = useState(1);
   const [selected, setSelected] = useState(null);
   const [draggingActor, setDraggingActor] = useState(null);
   const [draggingUseCase, setDraggingUseCase] = useState(null);
@@ -28,6 +29,26 @@ export default function UseCaseCanvas({
   const [editTarget, setEditTarget] = useState(null);
   const [resizingSystemBoundary, setResizingSystemBoundary] = useState(false);
   const [pendingAssociation, setPendingAssociation] = useState(null);
+
+  // Ctrl + Mouse Wheel listener for smooth Miro-style zooming
+  useEffect(() => {
+    const handleWheel = (e) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        setZoom(prev => Math.max(0.4, Math.min(2.5, prev + delta)));
+      }
+    };
+    const wrapper = scrollContainerRef.current;
+    if (wrapper) {
+      wrapper.addEventListener("wheel", handleWheel, { passive: false });
+    }
+    return () => {
+      if (wrapper) {
+        wrapper.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, []);
 
   // ── CENTER SYSTEM BOUNDARY ────────────────────────────────────────────────
   useEffect(() => {
@@ -56,8 +77,8 @@ export default function UseCaseCanvas({
     if (!raw) return;
     const item = JSON.parse(raw);
     const rect = canvasRef.current.getBoundingClientRect();
-    const dropX = e.clientX - rect.left;
-    const dropY = e.clientY - rect.top;
+    const dropX = (e.clientX - rect.left) / zoom;
+    const dropY = (e.clientY - rect.top) / zoom;
 
     if (item.kind === "actor") {
       const newActor = {
@@ -99,24 +120,28 @@ export default function UseCaseCanvas({
   const handleActorMouseDown = (e, actor) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
     setDraggingActor(actor.id);
-    setDragOffset({ x: e.clientX - rect.left - actor.x, y: e.clientY - rect.top - actor.y });
+    setDragOffset({ x: mx - actor.x, y: my - actor.y });
   };
 
   // ── USECASE drag ──────────────────────────────────────────────────────────
   const handleUseCaseMouseDown = (e, useCase) => {
     e.stopPropagation();
     const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
     setDraggingUseCase(useCase.id);
-    setDragOffset({ x: e.clientX - rect.left - useCase.x, y: e.clientY - rect.top - useCase.y });
+    setDragOffset({ x: mx - useCase.x, y: my - useCase.y });
   };
 
   // ── MOUSE MOVE ────────────────────────────────────────────────────────────
   const handleMouseMove = useCallback((e) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
 
     // Handle system boundary resize
     if (resizingSystemBoundary) {
@@ -147,7 +172,7 @@ export default function UseCaseCanvas({
         u.id === draggingUseCase ? { ...u, x: Math.max(20, mx - dragOffset.x), y: Math.max(20, my - dragOffset.y) } : u
       ));
     }
-  }, [draggingActor, draggingUseCase, dragOffset, resizingSystemBoundary, systemBoundary.y, setActors, setUseCases]);
+  }, [draggingActor, draggingUseCase, dragOffset, resizingSystemBoundary, systemBoundary.y, setActors, setUseCases, zoom]);
 
   const handleMouseUp = () => {
     setDraggingActor(null);
@@ -243,22 +268,84 @@ export default function UseCaseCanvas({
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden bg-slate-100">
-      <UseCaseToolbar
-        pendingAssociation={pendingAssociation}
-        onCancelPending={() => setPendingAssociation(null)}
-      />
+      {/* Toolbar */}
+      <div className="px-4 py-3 bg-white border-b border-slate-200 flex items-center justify-between">
+        <div className="flex items-center gap-4 text-sm text-slate-600">
+          <span>Actores: {actors.length}</span>
+          <span>Casos de Uso: {useCases.length}</span>
+          <span>Asociaciones: {associations.length}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg p-1">
+            <button
+              onClick={() => setZoom(prev => Math.max(0.4, prev - 0.1))}
+              className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded font-bold text-xs"
+              title="Zoom -"
+            >
+              -
+            </button>
+            <span className="text-xs font-semibold px-2 text-slate-700 min-w-[40px] text-center select-none">
+              {Math.round(zoom * 100)}%
+            </span>
+            <button
+              onClick={() => setZoom(prev => Math.min(2.5, prev + 0.1))}
+              className="w-6 h-6 flex items-center justify-center text-slate-600 hover:bg-slate-200 rounded font-bold text-xs"
+              title="Zoom +"
+            >
+              +
+            </button>
+            <div className="w-px h-4 bg-slate-200 mx-1"></div>
+            <button
+              onClick={() => setZoom(1.0)}
+              className="text-[10px] text-indigo-600 hover:underline px-1 font-semibold"
+              title="Restablecer"
+            >
+              1:1
+            </button>
+          </div>
+        </div>
+        {pendingAssociation && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-indigo-600 font-medium">
+              {!pendingAssociation.from ? "Selecciona elemento origen..." : "Selecciona elemento destino..."}
+            </span>
+            <button
+              onClick={() => setPendingAssociation(null)}
+              className="px-2 py-1 text-xs bg-slate-200 hover:bg-slate-300 rounded transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        )}
+      </div>
+
       <div ref={scrollContainerRef} className="flex-1 overflow-auto p-6">
         <div
-          ref={canvasRef}
-          className="relative bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
-          style={{ width: canvasWidth, height: canvasHeight, minWidth: '100%', minHeight: '100%' }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
-          onClick={() => setSelected(null)}
+          style={{
+            width: canvasWidth * zoom,
+            height: canvasHeight * zoom,
+            position: "relative",
+            borderRadius: "1rem",
+          }}
         >
+          <div
+            ref={canvasRef}
+            className="absolute left-0 top-0 bg-white rounded-2xl shadow-sm border border-slate-200 select-none"
+            style={{
+              width: canvasWidth,
+              height: canvasHeight,
+              cursor: draggingActor || draggingUseCase ? "grabbing" : "default",
+              transform: `scale(${zoom})`,
+              transformOrigin: "top left",
+            }}
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+            onClick={() => setSelected(null)}
+          >
           {/* Grid dots */}
           <svg className="absolute inset-0 w-full h-full rounded-2xl" style={{ zIndex: 0 }}>
             <defs>
@@ -387,6 +474,7 @@ export default function UseCaseCanvas({
               />
             </div>
           ))}
+          </div>
         </div>
       </div>
 
