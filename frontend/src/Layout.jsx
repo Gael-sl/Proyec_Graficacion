@@ -26,8 +26,7 @@ import {
   LayoutGrid,
   PanelLeftClose,
   PanelLeftOpen,
-  Wand2,
-  Zap
+  Wand2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -178,8 +177,8 @@ export default function Layout({ children }) {
           <div className="relative p-4 border-b border-white/60 rounded-t-[2rem] transition-colors duration-300">
             {isSidebarMinimized ? (
               <div className="flex flex-col items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-200/60">
-                  <Zap className="w-6 h-6 text-white" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/40 border border-white/60 shadow-sm overflow-hidden flex-shrink-0">
+                  <img src="/favicon.png" alt="GeraSoft Logo" className="w-8 h-8 object-contain" />
                 </div>
                 <button
                   type="button"
@@ -194,8 +193,8 @@ export default function Layout({ children }) {
             ) : (
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3 transition-all duration-300 min-w-0">
-                  <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-indigo-200/60">
-                    <Zap className="w-6 h-6 text-white" />
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/40 border border-white/60 shadow-sm overflow-hidden flex-shrink-0">
+                    <img src="/favicon.png" alt="GeraSoft Logo" className="w-8 h-8 object-contain" />
                   </div>
                   <div className="overflow-hidden">
                     <h1 className="text-slate-900 font-bold text-lg tracking-tighter whitespace-nowrap">GeraSoft</h1>

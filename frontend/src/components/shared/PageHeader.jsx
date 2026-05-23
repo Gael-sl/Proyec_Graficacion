@@ -16,11 +16,6 @@ export default function PageHeader({
     <div className={`apple-glass-panel border-b border-white/60 ${className || "px-8 py-6 mb-6"}`}>
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-5">
-          {Icon && (
-            <div className="w-14 h-14 bg-gradient-to-br from-indigo-500/80 to-purple-500/80 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-inner border border-white/30 shrink-0">
-              <Icon className="w-6 h-6 text-white" />
-            </div>
-          )}
           <div>
             <h1 className="text-[1.75rem] font-extrabold text-slate-800 tracking-tight leading-none">{title}</h1>
             {description && (
