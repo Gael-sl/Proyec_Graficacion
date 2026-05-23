@@ -1,5 +1,7 @@
 // @ts-nocheck
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+import JSZip from "jszip";
+import { saveAs } from "file-saver";
 import {
   AlertCircle,
   AlertTriangle,
@@ -262,25 +264,24 @@ function buildResearchSummary(data) {
   return parts.length ? parts.join("\n\n") : "- Sin datos de investigación registrados.";
 }
 
-function buildPromptText({ projectName, projectDescription, selections, data, synthesis, credentials }) {
-  const sections = {
-    project: `Proyecto: ${projectName}\nDescripción: ${projectDescription}`,
-    stack: `Stack: ${selections.backend}, ${selections.frontend}, ${selections.database}`,
-    auth: buildAuthConfig(selections.auth, data.roles, credentials),
-    fileStructure: buildFileStructure(selections.backend, selections.frontend, selections.database, data.modules),
-    permissionMatrix: buildPermissionMatrix(synthesis?.permissionMatrix),
-    research: buildResearchSummary(data),
-    stakeholders: `Stakeholders:\n${safeArray(data.stakeholders).map(s => `- ${s.nombre} (${s.tipo})`).join("\n")}`,
-    roles: `Roles:\n${safeArray(data.roles).map(r => `- ${r.nombre}: ${r.descripcion}`).join("\n")}`,
-    functions: `Funciones:\n${safeArray(data.functions).map(f => `- ${f.nombre} [Módulo: ${f.moduloId}]`).join("\n")}`,
-    modules: `Módulos:\n${safeArray(data.modules).map(m => `- ${m.nombre}: ${m.descripcion}`).join("\n")}`,
-    requirements: `Historias de Usuario:\n${safeArray(data.stories).map(s => `- ${s.titulo}: Como ${s.como} -> Quiero ${s.quiero} -> Para ${s.paraQue}`).join("\n")}`,
-    diagrams: `Diagramas UML (Mermaid):\n${safeArray(data.diagrams).map(d => `### ${d.nombre} (${d.tipo})\n\`\`\`mermaid\n${generateMermaid(d)}\n\`\`\``).join("\n\n")}`,
-    implementationPlan: buildImplementationPlan(data.modules),
-    instructions: "Eres un desarrollador senior. Basado en TODA la información anterior (incluyendo los diagramas Mermaid y los resultados de las entrevistas), genera una propuesta técnica completa y modular.",
-  };
+function buildPromptText({ projectName, projectDescription }) {
+  return `¡Hola! Eres un Desarrollador Senior y Arquitecto de Software experto.
 
-  return SECTION_ORDER.map(k => `## ${k.toUpperCase()}\n${sections[k]}`).join("\n\n");
+Te acabo de proveer un archivo ZIP descomprimido con la estructura y contexto de mi nuevo proyecto llamado "${projectName}".
+
+He organizado los requerimientos en las siguientes carpetas para que tengas un contexto claro y modular:
+- \`backend/\`: Contiene la configuración de base de datos, arquitectura, roles y estrategias de autenticación y seguridad.
+- \`frontend/\`: Contiene el stack UI, las historias de usuario y los módulos a desarrollar.
+- \`documentacion/\`: Contiene la investigación de campo y los diagramas UML.
+- \`reglas_criticas.md\`: Reglas inquebrantables que debes seguir al generar código para evitar dañar el sistema.
+
+Descripción del Proyecto:
+${projectDescription || "Sin descripción proporcionada."}
+
+**Instrucción:**
+1. Por favor, lee cuidadosamente el contenido de todos los archivos \`.md\` dentro de esas carpetas.
+2. Analiza las \`reglas_criticas.md\` antes de escribir una sola línea de código.
+3. Cuando estés listo, confirma que has entendido todo el contexto y propón el primer paso del Plan de Implementación para que comencemos a codificar.`;
 }
 
 function TechPicker({ title, icon: Icon, options, value, onChange }) {
@@ -356,14 +357,7 @@ export default function GeneradorPrompt() {
 
   const regeneratePrompt = () => {
     setIsGenerating(true);
-    const text = buildPromptText({ 
-      projectName, 
-      projectDescription, 
-      selections, 
-      data, 
-      synthesis,
-      credentials: { googleClientId, googleClientSecret, smtpUser, smtpPass }
-    });
+    const text = buildPromptText({ projectName, projectDescription });
     setPromptText(text);
     setTimeout(() => setIsGenerating(false), 300);
   };
@@ -374,17 +368,35 @@ export default function GeneradorPrompt() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!promptText) return;
-    const blob = new Blob([promptText], { type: "text/markdown" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Prompt_${projectName.replace(/\s+/g, "_")}.md`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    setIsGenerating(true);
+
+    const zip = new JSZip();
+    const folderName = projectName.replace(/[^a-zA-Z0-9_-]/g, "_") || "Proyecto";
+    const root = zip.folder(folderName);
+
+    // Backend
+    const backend = root.folder("backend");
+    backend.file("1_arquitectura_y_bd.md", `=== ARQUITECTURA Y BASE DE DATOS ===\nStack: ${selections.backend}\nBase de datos: ${selections.database}\n\n${buildFileStructure(selections.backend, selections.frontend, selections.database, data.modules)}`);
+    backend.file("2_logica_y_seguridad.md", buildAuthConfig(selections.auth, data.roles, { googleClientId, googleClientSecret, smtpUser, smtpPass }) + "\n\n=== ROLES ===\n" + safeArray(data.roles).map(r => `- ${r.nombre}: ${r.descripcion}`).join("\n") + "\n\n=== MATRIZ DE PERMISOS ===\n" + buildPermissionMatrix(synthesis?.permissionMatrix));
+
+    // Frontend
+    const frontend = root.folder("frontend");
+    frontend.file("1_stack_y_ui.md", `=== STACK FRONTEND ===\nStack: ${selections.frontend}\n\n=== FUNCIONES ===\n${safeArray(data.functions).map(f => `- ${f.nombre} [Módulo: ${f.moduloId}]`).join("\n")}`);
+    frontend.file("2_historias_y_modulos.md", `=== MÓDULOS ===\n${safeArray(data.modules).map(m => `- ${m.nombre}: ${m.descripcion}`).join("\n")}\n\n=== HISTORIAS DE USUARIO ===\n${safeArray(data.stories).map(s => `- ${s.titulo}: Como ${s.como} -> Quiero ${s.quiero} -> Para ${s.paraQue}`).join("\n")}`);
+
+    // Documentacion
+    const doc = root.folder("documentacion");
+    doc.file("investigacion_y_diagramas.md", `${buildResearchSummary(data)}\n\n=== DIAGRAMAS UML ===\n${safeArray(data.diagrams).map(d => `### ${d.nombre} (${d.tipo})\n\`\`\`mermaid\n${generateMermaid(d)}\n\`\`\``).join("\n\n")}\n\n=== STAKEHOLDERS ===\n${safeArray(data.stakeholders).map(s => `- ${s.nombre} (${s.tipo})`).join("\n")}`);
+
+    // Reglas Críticas
+    root.file("reglas_criticas.md", `=== REGLAS CRÍTICAS DE DESARROLLO ===\n1. NO asumas dependencias no mencionadas. Pide confirmación si necesitas librerías externas.\n2. TODO el código debe ser funcional, no omitas funciones con comentarios como "// la lógica va aquí". Escribe la implementación completa.\n3. Asegúrate de manejar errores (Try/Catch) en todas las operaciones asíncronas.\n4. Si el código que generas rompe una funcionalidad existente, provee el plan para solucionarlo inmediatamente.\n5. Sigue el Plan de Implementación paso a paso, no te saltes etapas.`);
+
+    const content = await zip.generateAsync({ type: "blob" });
+    saveAs(content, `${folderName}_Contexto_IA.zip`);
+    
+    setIsGenerating(false);
   };
 
   return (
