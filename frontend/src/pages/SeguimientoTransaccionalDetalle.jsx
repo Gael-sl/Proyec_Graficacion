@@ -94,6 +94,7 @@ export default function SeguimientoTransaccionalDetalle() {
         reglas: seguimiento.reglas || "",
         conclusiones: seguimiento.conclusiones || ""
       });
+      setDataFiles(seguimiento.dataFiles || []);
     }
   }, [seguimiento]);
 
@@ -129,7 +130,8 @@ export default function SeguimientoTransaccionalDetalle() {
       actores: formData.stakeholderIds?.join(",") || "",
       flujo: conclusiones.patrones || "",
       excepciones: conclusiones.cuellos || "",
-      ...conclusiones
+      ...conclusiones,
+      dataFiles: dataFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
     };
     saveMutation.mutate(dataToSave);
     setSaving(false);

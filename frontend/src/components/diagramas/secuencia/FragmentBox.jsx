@@ -104,7 +104,7 @@ export default function FragmentBox({ fragment, isSelected, onClick, onDoubleCli
         }}
         onMouseDown={(e) => {
           e.stopPropagation();
-          // resize handled in canvas
+          onMouseDown(e);
         }}
       />
     </div>

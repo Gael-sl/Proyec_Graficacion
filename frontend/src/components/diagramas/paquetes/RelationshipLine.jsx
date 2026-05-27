@@ -38,6 +38,17 @@ export default function RelationshipLine({
 
   return (
     <g>
+      {/* Hit target transparent */}
+      <line
+        x1={fromX}
+        y1={fromY}
+        x2={toX}
+        y2={toY}
+        stroke="transparent"
+        strokeWidth="12"
+        className="cursor-pointer"
+      />
+
       {/* Línea */}
       <line
         x1={fromX}
@@ -117,17 +128,6 @@ export default function RelationshipLine({
           </button>
         </foreignObject>
       )}
-
-      {/* Hit target transparent */}
-      <line
-        x1={fromX}
-        y1={fromY}
-        x2={toX}
-        y2={toY}
-        stroke="transparent"
-        strokeWidth="12"
-        className="cursor-pointer"
-      />
     </g>
   );
 }

@@ -11,6 +11,11 @@ router.get('/', (req, res) => {
     const result = historias.map(historia => {
       const stakeholderIds = db.prepare('SELECT stakeholderId FROM historia_stakeholders WHERE historiaId = ?').all(historia.id).map(r => r.stakeholderId);
       const funcionIds = db.prepare('SELECT funcionId FROM historia_funciones WHERE historiaId = ?').all(historia.id).map(r => r.funcionId);
+      try {
+        historia.prototiposFiles = JSON.parse(historia.prototiposFiles || '[]');
+      } catch (e) {
+        historia.prototiposFiles = [];
+      }
       return { ...historia, stakeholderIds, funcionIds };
     });
     
@@ -28,6 +33,12 @@ router.get('/:id', (req, res) => {
     const stakeholderIds = db.prepare('SELECT stakeholderId FROM historia_stakeholders WHERE historiaId = ?').all(req.params.id).map(r => r.stakeholderId);
     const funcionIds = db.prepare('SELECT funcionId FROM historia_funciones WHERE historiaId = ?').all(req.params.id).map(r => r.funcionId);
     
+    try {
+      historia.prototiposFiles = JSON.parse(historia.prototiposFiles || '[]');
+    } catch (e) {
+      historia.prototiposFiles = [];
+    }
+    
     res.json({ ...historia, stakeholderIds, funcionIds });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -40,7 +51,8 @@ router.post('/', (req, res) => {
       idHistoria, titulo, como, quiero, paraQue, 
       descripcion, aceptacion, criteriosAceptacion, 
       prioridad, estimacion, estado, comentarios, 
-      dependencias, funcionId, stakeholderIds = [], funcionIds = []
+      dependencias, funcionId, stakeholderIds = [], funcionIds = [],
+      prototiposFiles = []
     } = req.body;
     
     const id = uuidv4();
@@ -52,14 +64,14 @@ router.post('/', (req, res) => {
           id, idHistoria, titulo, como, quiero, paraQue, 
           descripcion, aceptacion, criteriosAceptacion, 
           prioridad, estimacion, estado, comentarios, 
-          dependencias, funcionId, fechaCreacion, fechaActualizacion
+          dependencias, funcionId, prototiposFiles, fechaCreacion, fechaActualizacion
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id, idHistoria || null, titulo, como || null, quiero || null, paraQue || null,
         descripcion || null, aceptacion || null, criteriosAceptacion || null,
         prioridad || 'media', estimacion || null, estado || 'pendiente', comentarios || null,
-        dependencias || null, funcionId || null, now, now
+        dependencias || null, funcionId || null, JSON.stringify(prototiposFiles), now, now
       );
 
       stakeholderIds.forEach(sid => {
@@ -83,7 +95,8 @@ router.put('/:id', (req, res) => {
       idHistoria, titulo, como, quiero, paraQue, 
       descripcion, aceptacion, criteriosAceptacion, 
       prioridad, estimacion, estado, comentarios, 
-      dependencias, funcionId, stakeholderIds = [], funcionIds = []
+      dependencias, funcionId, stakeholderIds = [], funcionIds = [],
+      prototiposFiles = []
     } = req.body;
     
     const now = new Date().toISOString();
@@ -94,13 +107,13 @@ router.put('/:id', (req, res) => {
         SET idHistoria = ?, titulo = ?, como = ?, quiero = ?, paraQue = ?, 
             descripcion = ?, aceptacion = ?, criteriosAceptacion = ?, 
             prioridad = ?, estimacion = ?, estado = ?, comentarios = ?, 
-            dependencias = ?, funcionId = ?, fechaActualizacion = ?
+            dependencias = ?, funcionId = ?, prototiposFiles = ?, fechaActualizacion = ?
         WHERE id = ?
       `).run(
         idHistoria || null, titulo, como || null, quiero || null, paraQue || null,
         descripcion || null, aceptacion || null, criteriosAceptacion || null,
         prioridad || 'media', estimacion || null, estado || 'pendiente', comentarios || null,
-        dependencias || null, funcionId || null, now, req.params.id
+        dependencias || null, funcionId || null, JSON.stringify(prototiposFiles), now, req.params.id
       );
 
       if (result.changes === 0) throw new Error('Historia not found');

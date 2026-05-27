@@ -140,6 +140,59 @@ export default function DiagramaClases() {
     navigate("/DiagramasClases");
   };
 
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleManualSave = async () => {
+    setIsSaving(true);
+    setSaveSuccess(false);
+    try {
+      const diagrams = getLocalDiagrams(STORAGE_KEY);
+      const index = diagrams.findIndex(d => d.id === id);
+      
+      const updatedDiagram = {
+        id,
+        name: diagramName,
+        description: diagramDescription,
+        funcionId,
+        classes,
+        relationships,
+        interfaces,
+        enums,
+        updatedAt: new Date().toISOString(),
+      };
+
+      if (index >= 0) {
+        diagrams[index] = { ...diagrams[index], ...updatedDiagram };
+      } else {
+        diagrams.push(updatedDiagram);
+      }
+      saveLocalDiagrams(STORAGE_KEY, diagrams);
+
+      if (id) {
+        await entities.Diagrama.update(id, {
+          id,
+          tipo: "class",
+          nombre: diagramName,
+          descripcion: diagramDescription,
+          funcionId,
+          contenido: {
+            classes,
+            relationships,
+            interfaces,
+            enums
+          }
+        });
+      }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch (e) {
+      console.error("Error manually saving diagram:", e);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="h-screen bg-slate-50 flex items-center justify-center">
@@ -156,15 +209,25 @@ export default function DiagramaClases() {
         icon={LayoutGrid}
         className="px-6 py-4 mb-2"
       >
-        <Button
-          onClick={handleBack}
-          variant="outline"
-          size="sm"
-          className="gap-2"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Volver
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={handleManualSave}
+            disabled={isSaving}
+            className="gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all duration-200"
+            size="sm"
+          >
+            {saveSuccess ? "Guardado ✓" : isSaving ? "Guardando..." : "Guardar"}
+          </Button>
+          <Button
+            onClick={handleBack}
+            variant="outline"
+            size="sm"
+            className="gap-2"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            Volver
+          </Button>
+        </div>
       </PageHeader>
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <ClassPalette />

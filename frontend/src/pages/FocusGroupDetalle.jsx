@@ -82,6 +82,7 @@ export default function FocusGroupDetalle() {
         hallazgos: focusGroup.hallazgos || "",
         puntosConflicto: focusGroup.puntosConflicto || ""
       });
+      setAudioVideoFiles(focusGroup.audioVideoFiles || []);
     }
   }, [focusGroup]);
 
@@ -117,7 +118,8 @@ export default function FocusGroupDetalle() {
       resultados: conclusiones.hallazgos || conclusiones.resumenDiscusiones || "",
       notas: conclusiones.puntosConflicto || "",
       transcripcion,
-      ...conclusiones
+      ...conclusiones,
+      audioVideoFiles: audioVideoFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
     };
     saveMutation.mutate(dataToSave);
     setSaving(false);

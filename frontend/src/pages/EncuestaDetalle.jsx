@@ -80,6 +80,7 @@ export default function EncuestaDetalle() {
         hallazgos: encuesta.hallazgos || "",
         recomendaciones: encuesta.recomendaciones || ""
       });
+      setResultadosFiles(encuesta.resultadosFiles || []);
     }
   }, [encuesta]);
 
@@ -110,7 +111,8 @@ export default function EncuestaDetalle() {
     const dataToSave = {
       ...formData,
       numeroRespuestas: formData.numeroRespuestas ? Number(formData.numeroRespuestas) : 0,
-      ...conclusiones
+      ...conclusiones,
+      resultadosFiles: resultadosFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
     };
     saveMutation.mutate(dataToSave);
     setSaving(false);

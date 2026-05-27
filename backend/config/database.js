@@ -365,6 +365,65 @@ export function initializeDatabase() {
     wrapper.exec(stmt);
   });
 
+  // Safe migration helper to add columns if they don't exist
+  const addColumn = (table, col, type) => {
+    try {
+      wrapper.exec(`ALTER TABLE ${table} ADD COLUMN ${col} ${type}`);
+    } catch (e) {
+      // Ignore if column already exists
+    }
+  };
+
+  // Migrations for encuestas
+  addColumn('encuestas', 'objetivo', 'TEXT');
+  addColumn('encuestas', 'plataforma', 'TEXT');
+  addColumn('encuestas', 'fechaLanzamiento', 'TEXT');
+  addColumn('encuestas', 'fechaCierre', 'TEXT');
+  addColumn('encuestas', 'numeroRespuestas', 'INTEGER');
+  addColumn('encuestas', 'urlEncuesta', 'TEXT');
+  addColumn('encuestas', 'estado', 'TEXT');
+  addColumn('encuestas', 'stakeholderIds', 'TEXT');
+  addColumn('encuestas', 'funcionIds', 'TEXT');
+  addColumn('encuestas', 'analisisResultados', 'TEXT');
+  addColumn('encuestas', 'hallazgos', 'TEXT');
+  addColumn('encuestas', 'recomendaciones', 'TEXT');
+  addColumn('encuestas', 'resultadosFiles', 'TEXT');
+
+  // Migrations for focus_groups
+  addColumn('focus_groups', 'tema', 'TEXT');
+  addColumn('focus_groups', 'objetivo', 'TEXT');
+  addColumn('focus_groups', 'horaInicio', 'TEXT');
+  addColumn('focus_groups', 'horaFin', 'TEXT');
+  addColumn('focus_groups', 'moderador', 'TEXT');
+  addColumn('focus_groups', 'estado', 'TEXT');
+  addColumn('focus_groups', 'stakeholderIds', 'TEXT');
+  addColumn('focus_groups', 'funcionIds', 'TEXT');
+  addColumn('focus_groups', 'transcripcion', 'TEXT');
+  addColumn('focus_groups', 'resumenDiscusiones', 'TEXT');
+  addColumn('focus_groups', 'hallazgos', 'TEXT');
+  addColumn('focus_groups', 'puntosConflicto', 'TEXT');
+  addColumn('focus_groups', 'audioVideoFiles', 'TEXT');
+
+  // Migrations for seguimientos_transaccionales
+  addColumn('seguimientos_transaccionales', 'sistema', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'tipoTransaccion', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'periodoInicio', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'periodoFin', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'fuenteDatos', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'objetivo', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'stakeholderIds', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'funcionIds', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'dataFiles', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'patrones', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'frecuencias', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'cuellos', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'reglas', 'TEXT');
+  addColumn('seguimientos_transaccionales', 'conclusiones', 'TEXT');
+
+  // Migrations for historias_usuario
+  addColumn('historias_usuario', 'prototiposFiles', 'TEXT');
+
+
   // Insert default roles if not exist
   try {
     const rolesExist = wrapper.prepare('SELECT COUNT(*) as count FROM roles').get();

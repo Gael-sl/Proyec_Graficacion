@@ -13,7 +13,8 @@ const LIFELINE_START_Y = 100;
 const MESSAGE_HEIGHT = 60;
 
 export default function SequenceCanvas({
-  actors, setActors, messages, setMessages, selected, setSelected, diagramName
+  actors, setActors, messages, setMessages, selected, setSelected, diagramName,
+  fragments, setFragments, notes, setNotes, activations, setActivations
 }) {
   const canvasRef = useRef(null);
   const wrapperRef = useRef(null);
@@ -41,9 +42,7 @@ export default function SequenceCanvas({
     };
   }, []);
 
-  const [fragments, setFragments] = useState([]);
-  const [notes, setNotes] = useState([]);
-  const [activations, setActivations] = useState([]);
+
 
   const [draggingFragment, setDraggingFragment] = useState(null);
   const [draggingNote, setDraggingNote] = useState(null);

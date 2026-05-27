@@ -81,6 +81,7 @@ export default function HistoriaUsuarioDetalle() {
         comentarios: historia.comentarios || "",
         dependencias: historia.dependencias || ""
       });
+      setPrototiposFiles(historia.prototiposFiles || []);
     }
   }, [historia]);
 
@@ -110,7 +111,8 @@ export default function HistoriaUsuarioDetalle() {
     setSaving(true);
     const dataToSave = {
       ...formData,
-      ...conclusiones
+      ...conclusiones,
+      prototiposFiles: prototiposFiles.map(f => ({ name: f.name, size: f.size, type: f.type }))
     };
     saveMutation.mutate(dataToSave);
     setSaving(false);
