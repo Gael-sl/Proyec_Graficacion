@@ -68,14 +68,8 @@ export default function DiagramaSecuencia() {
         });
     } else {
       // Default state for new diagram
-      setActors([
-        { id: "a1", name: "Usuario", type: "actor", x: 100 },
-        { id: "a2", name: "Sistema", type: "system", x: 300 },
-      ]);
-      setMessages([
-        { id: "m1", from: "a1", to: "a2", label: "solicitar()", type: "sync", order: 1 },
-        { id: "m2", from: "a2", to: "a1", label: "respuesta()", type: "return", order: 2 },
-      ]);
+      setActors([]);
+      setMessages([]);
       setFragments([]);
       setNotes([]);
       setActivations([]);

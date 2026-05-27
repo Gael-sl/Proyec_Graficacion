@@ -100,13 +100,8 @@ export default function DiagramasCasosUso() {
       const newDiagram = {
         id: diagramId,
         ...formData,
-        actors: [
-          { id: "a1", type: "actor", name: "Actor 1", description: "", x: 50, y: 150 },
-          { id: "a2", type: "actor", name: "Actor 2", description: "", x: 600, y: 150 },
-        ],
-        useCases: [
-          { id: "uc1", type: "usecase", name: "Caso de Uso 1", description: "", x: 250, y: 100, width: 120, height: 80 },
-        ],
+        actors: [],
+        useCases: [],
         associations: [],
         systemBoundary: { x: 200, y: 100, width: 400, height: 300 },
         createdAt: new Date().toISOString(),

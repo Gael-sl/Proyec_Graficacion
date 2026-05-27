@@ -100,10 +100,7 @@ export default function DiagramasSecuencia() {
       const newDiagram = {
         id: diagramId,
         ...formData,
-        actors: [
-          { id: "a1", name: "Actor 1", type: "actor", x: 100 },
-          { id: "a2", name: "Sistema", type: "system", x: 300 },
-        ],
+        actors: [],
         messages: [],
         fragments: [],
         notes: [],

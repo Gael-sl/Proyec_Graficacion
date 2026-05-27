@@ -25,6 +25,7 @@ export default function UseCaseCanvas({
   const [selected, setSelected] = useState(null);
   const [draggingActor, setDraggingActor] = useState(null);
   const [draggingUseCase, setDraggingUseCase] = useState(null);
+  const [draggingSystemBoundary, setDraggingSystemBoundary] = useState(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [editTarget, setEditTarget] = useState(null);
   const [resizingSystemBoundary, setResizingSystemBoundary] = useState(false);
@@ -50,25 +51,56 @@ export default function UseCaseCanvas({
     };
   }, []);
 
-  // ── CENTER SYSTEM BOUNDARY ────────────────────────────────────────────────
+  // Auto-expand/reposition system boundary to wrap all use cases
   useEffect(() => {
-    const centerSystemBoundary = () => {
-      if (canvasRef.current) {
-        const canvasWidth = canvasRef.current.offsetWidth;
-        const centeredX = (canvasWidth - systemBoundary.width) / 2;
-        setSystemBoundary(prev => ({ ...prev, x: Math.max(20, centeredX) }));
+    if (useCases.length === 0) return;
+
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
+
+    useCases.forEach(u => {
+      const w = u.width || 120;
+      const h = u.height || 80;
+      if (u.x < minX) minX = u.x;
+      if (u.x + w > maxX) maxX = u.x + w;
+      if (u.y < minY) minY = u.y;
+      if (u.y + h > maxY) maxY = u.y + h;
+    });
+
+    const padding = 40;
+
+    setSystemBoundary(prev => {
+      let newX = prev.x;
+      let newY = prev.y;
+      let newWidth = prev.width;
+      let newHeight = prev.height;
+
+      // Expand to contain
+      if (minX - padding < prev.x) {
+        const diff = prev.x - (minX - padding);
+        newX = Math.max(20, minX - padding);
+        newWidth = prev.width + diff;
       }
-    };
+      if (minY - padding < prev.y) {
+        const diff = prev.y - (minY - padding);
+        newY = Math.max(20, minY - padding);
+        newHeight = prev.height + diff;
+      }
+      if (maxX + padding > newX + newWidth) {
+        newWidth = (maxX + padding) - newX;
+      }
+      if (maxY + padding > newY + newHeight) {
+        newHeight = (maxY + padding) - newY;
+      }
 
-    const resizeObserver = new ResizeObserver(centerSystemBoundary);
-    if (canvasRef.current) {
-      resizeObserver.observe(canvasRef.current);
-    }
-
-    centerSystemBoundary();
-
-    return () => resizeObserver.disconnect();
-  }, [systemBoundary.width]);
+      if (newX !== prev.x || newY !== prev.y || newWidth !== prev.width || newHeight !== prev.height) {
+        return { x: newX, y: newY, width: newWidth, height: newHeight };
+      }
+      return prev;
+    });
+  }, [useCases, setSystemBoundary]);
 
   // ── DROP from palette ──────────────────────────────────────────────────────
   const handleDrop = useCallback((e) => {
@@ -143,10 +175,11 @@ export default function UseCaseCanvas({
     const mx = (e.clientX - rect.left) / zoom;
     const my = (e.clientY - rect.top) / zoom;
 
-    // Handle system boundary resize
+    // Handle system boundary resize (Width and Height)
     if (resizingSystemBoundary) {
+      const newWidth = Math.max(200, mx - systemBoundary.x);
       const newHeight = Math.max(150, my - systemBoundary.y);
-      setSystemBoundary(prev => ({ ...prev, height: newHeight }));
+      setSystemBoundary(prev => ({ ...prev, width: newWidth, height: newHeight }));
 
       // Auto-scroll hacia abajo si el usuario está estirando cerca del borde visible
       if (scrollContainerRef.current) {
@@ -162,6 +195,16 @@ export default function UseCaseCanvas({
       return;
     }
 
+    // Handle system boundary drag
+    if (draggingSystemBoundary) {
+      setSystemBoundary(prev => ({
+        ...prev,
+        x: Math.max(20, mx - draggingSystemBoundary.ox),
+        y: Math.max(20, my - draggingSystemBoundary.oy)
+      }));
+      return;
+    }
+
     if (draggingActor) {
       setActors(prev => prev.map(a =>
         a.id === draggingActor ? { ...a, x: Math.max(20, mx - dragOffset.x), y: Math.max(20, my - dragOffset.y) } : a
@@ -172,15 +215,28 @@ export default function UseCaseCanvas({
         u.id === draggingUseCase ? { ...u, x: Math.max(20, mx - dragOffset.x), y: Math.max(20, my - dragOffset.y) } : u
       ));
     }
-  }, [draggingActor, draggingUseCase, dragOffset, resizingSystemBoundary, systemBoundary.y, setActors, setUseCases, zoom]);
+  }, [draggingActor, draggingUseCase, draggingSystemBoundary, dragOffset, resizingSystemBoundary, systemBoundary, setActors, setUseCases, setSystemBoundary, zoom]);
 
   const handleMouseUp = () => {
     setDraggingActor(null);
     setDraggingUseCase(null);
+    setDraggingSystemBoundary(null);
     setResizingSystemBoundary(false);
   };
 
-  // ── SYSTEM BOUNDARY RESIZE ───────────────────────────────────────────────
+  // ── SYSTEM BOUNDARY MOUSE DOWN & RESIZE ───────────────────────────────────
+  const handleSystemBoundaryMouseDown = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = canvasRef.current.getBoundingClientRect();
+    const mx = (e.clientX - rect.left) / zoom;
+    const my = (e.clientY - rect.top) / zoom;
+    setDraggingSystemBoundary({
+      ox: mx - systemBoundary.x,
+      oy: my - systemBoundary.y
+    });
+  };
+
   const handleSystemBoundaryResizeStart = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -358,32 +414,65 @@ export default function UseCaseCanvas({
 
           {/* System Boundary (resizable) */}
           <svg 
-            className="absolute bg-white" 
+            className="absolute bg-white/40" 
             style={{ 
               left: systemBoundary.x, 
               top: systemBoundary.y, 
               zIndex: 0, 
               pointerEvents: "auto",
-              cursor: resizingSystemBoundary ? "ns-resize" : "default"
             }} 
             width={systemBoundary.width} 
             height={systemBoundary.height}
           >
+            {/* Main box background & border */}
             <rect 
               x="0" 
               y="0" 
               width={systemBoundary.width} 
               height={systemBoundary.height} 
-              fill="none" 
-              stroke="#1e293b" 
+              fill="rgba(248, 250, 252, 0.25)" 
+              stroke="#64748b" 
               strokeWidth="2" 
+              rx="8"
               pointerEvents="none"
             />
+            
+            {/* Header drag bar (top 30px) */}
+            <rect 
+              x="0" 
+              y="0" 
+              width={systemBoundary.width} 
+              height="30" 
+              fill="#f1f5f9" 
+              stroke="#64748b" 
+              strokeWidth="2" 
+              rx="8"
+              onMouseDown={handleSystemBoundaryMouseDown}
+              style={{ pointerEvents: "auto", cursor: "move" }}
+            />
+            {/* Cover lower rounded corners of header with a simple rect to merge with body */}
+            <rect 
+              x="1" 
+              y="20" 
+              width={systemBoundary.width - 2} 
+              height="9" 
+              fill="#f1f5f9" 
+              pointerEvents="none"
+            />
+            <line
+              x1="0"
+              y1="30"
+              x2={systemBoundary.width}
+              y2="30"
+              stroke="#64748b"
+              strokeWidth="2"
+            />
+
             <text 
               x={systemBoundary.width / 2} 
-              y="20" 
-              fontSize="13" 
-              fill="#1e293b" 
+              y="19" 
+              fontSize="12" 
+              fill="#334155" 
               fontWeight="bold"
               textAnchor="middle"
               pointerEvents="none"
@@ -391,27 +480,29 @@ export default function UseCaseCanvas({
               Sistema
             </text>
             
-            {/* Resize handle at bottom */}
-            <rect
-              x="0"
-              y={systemBoundary.height - 8}
-              width={systemBoundary.width}
-              height="8"
-              fill="transparent"
+            {/* Corner Resize handle (bottom-right) */}
+            <g
               onMouseDown={handleSystemBoundaryResizeStart}
-              style={{ pointerEvents: "auto", cursor: "ns-resize" }}
-            />
-            {/* Visual indicator for resize handle */}
-            <line
-              x1="0"
-              y1={systemBoundary.height - 4}
-              x2={systemBoundary.width}
-              y2={systemBoundary.height - 4}
-              stroke="#cbd5e1"
-              strokeWidth="2"
-              strokeDasharray="3,3"
-              pointerEvents="none"
-            />
+              style={{ pointerEvents: "auto", cursor: "nwse-resize" }}
+            >
+              {/* Hit zone larger transparent */}
+              <circle
+                cx={systemBoundary.width - 8}
+                cy={systemBoundary.height - 8}
+                r="16"
+                fill="transparent"
+              />
+              {/* Visual indicator circle badge */}
+              <circle
+                cx={systemBoundary.width - 8}
+                cy={systemBoundary.height - 8}
+                r="6"
+                fill="#4f46e5"
+                stroke="#ffffff"
+                strokeWidth="1.5"
+                className="transition-all duration-200 hover:scale-125"
+              />
+            </g>
           </svg>
 
           {/* Associations */}

@@ -66,19 +66,7 @@ export default function DiagramaClases() {
         });
     } else {
       // Default state for new diagram
-      setClasses([
-        {
-          id: "c1",
-          type: "class",
-          name: "Clase 1",
-          x: 100,
-          y: 100,
-          width: 180,
-          height: 150,
-          attributes: [],
-          methods: [],
-        },
-      ]);
+      setClasses([]);
       setInterfaces([]);
       setEnums([]);
       setDiagramDescription("");

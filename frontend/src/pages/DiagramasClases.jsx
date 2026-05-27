@@ -100,19 +100,7 @@ export default function DiagramasClases() {
       const newDiagram = {
         id: diagramId,
         ...formData,
-        classes: [
-          {
-            id: "c1",
-            name: "Clase 1",
-            description: "",
-            x: 100,
-            y: 100,
-            width: 150,
-            height: 120,
-            attributes: [],
-            methods: [],
-          },
-        ],
+        classes: [],
         relationships: [],
         interfaces: [],
         enums: [],

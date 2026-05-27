@@ -33,6 +33,34 @@ export default function UseCasePalette() {
   const handleDragStart = (e, item) => {
     e.dataTransfer.effectAllowed = "copy";
     e.dataTransfer.setData("application/palette-item", JSON.stringify(item));
+    
+    // Create a beautiful small drag preview badge
+    const dragImage = document.createElement("div");
+    dragImage.innerText = item.label || item.defaultName;
+    dragImage.style.position = "fixed";
+    dragImage.style.left = "-9999px";
+    dragImage.style.top = "-9999px";
+    dragImage.style.padding = "6px 12px";
+    dragImage.style.background = "#4f46e5"; // indigo-600
+    dragImage.style.color = "#ffffff";
+    dragImage.style.borderRadius = "8px";
+    dragImage.style.fontSize = "12px";
+    dragImage.style.fontWeight = "600";
+    dragImage.style.boxShadow = "0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1)";
+    dragImage.style.border = "1px solid #818cf8"; // indigo-400
+    dragImage.style.zIndex = "99999";
+    dragImage.style.pointerEvents = "none";
+    
+    document.body.appendChild(dragImage);
+    e.dataTransfer.setDragImage(dragImage, 30, 15);
+    
+    const handleDragEnd = () => {
+      if (document.body.contains(dragImage)) {
+        document.body.removeChild(dragImage);
+      }
+      e.target.removeEventListener("dragend", handleDragEnd);
+    };
+    e.target.addEventListener("dragend", handleDragEnd);
   };
 
   return (

@@ -100,18 +100,7 @@ export default function DiagramasPaquetes() {
       const newDiagram = {
         id: diagramId,
         ...formData,
-        packages: [
-          {
-            id: "p1",
-            name: "Paquete 1",
-            description: "",
-            x: 100,
-            y: 100,
-            width: 200,
-            height: 150,
-            elements: [],
-          },
-        ],
+        packages: [],
         dependencies: [],
         imports: [],
         notes: [],

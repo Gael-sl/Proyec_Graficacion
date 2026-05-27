@@ -65,14 +65,8 @@ export default function DiagramaCasosUso() {
         });
     } else {
       // Default state for new diagram
-      setActors([
-        { id: "a1", type: "actor", name: "Usuario", description: "Usuario del sistema", x: 50, y: 150 },
-        { id: "a2", type: "actor", name: "Administrador", description: "Administrador del sistema", x: 600, y: 150 },
-      ]);
-      setUseCases([
-        { id: "uc1", type: "usecase", name: "Iniciar sesión", description: "El usuario inicia sesión en el sistema", x: 250, y: 100, width: 120, height: 80 },
-        { id: "uc2", type: "usecase", name: "Gestionar datos", description: "Administración de datos del sistema", x: 250, y: 220, width: 120, height: 80 },
-      ]);
+      setActors([]);
+      setUseCases([]);
       setAssociations([]);
       setDiagramDescription("");
       setFuncionId("");

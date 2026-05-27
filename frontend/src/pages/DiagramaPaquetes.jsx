@@ -66,18 +66,7 @@ export default function DiagramaPaquetes() {
         });
     } else {
       // Default state for new diagram
-      setPackages([
-        {
-          id: "p1",
-          type: "package",
-          name: "Paquete 1",
-          description: "",
-          x: 100,
-          y: 100,
-          width: 200,
-          height: 150,
-        },
-      ]);
+      setPackages([]);
       setImports([]);
       setDiagramDescription("");
       setFuncionId("");
